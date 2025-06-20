@@ -1,50 +1,40 @@
 import mongoose, { Document, Schema } from 'mongoose';
-import { IPerson } from './Person';
+
+export type RecommendationStatus = 'Pending' | 'Submitted';
+export type SubmissionMethod = 'DirectEmail' | 'StudentUpload' | 'DirectMail';
 
 export interface IRecommendation extends Document {
-  recommenderId: mongoose.Types.ObjectId;
-  studentId: mongoose.Types.ObjectId;
-  submissionMethod: string;
-  status: string;
+  recommender: mongoose.Types.ObjectId;
+  status: RecommendationStatus;
+  submissionMethod: SubmissionMethod;
+  requestDate: Date;
   dueDate: Date;
-  completionDate?: Date;
-  notes: string;
-  createdAt: Date;
-  updatedAt: Date;
+  submissionDate?: Date;
 }
 
 const RecommendationSchema: Schema = new Schema({
-  recommenderId: {
+  recommender: {
     type: Schema.Types.ObjectId,
     ref: 'Recommender',
     required: true
   },
-  studentId: {
-    type: Schema.Types.ObjectId,
-    ref: 'Person',
-    required: true
+  status: {
+    type: String,
+    enum: ['Pending', 'Submitted'],
+    default: 'Pending'
   },
   submissionMethod: {
     type: String,
-    required: true,
-    trim: true
+    enum: ['DirectEmail', 'StudentUpload', 'DirectMail']
   },
-  status: {
-    type: String,
-    required: true,
-    enum: ['pending', 'submitted', 'completed', 'cancelled'],
-    default: 'pending'
+  requestDate: {
+    type: Date,
   },
   dueDate: {
     type: Date,
-    required: true
   },
-  completionDate: {
+  submissionDate: {
     type: Date
-  },
-  notes: {
-    type: String,
-    trim: true
   }
 }, {
   timestamps: true

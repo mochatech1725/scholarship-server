@@ -1,9 +1,13 @@
 import express from 'express';
-import { register, login } from '../controllers/auth.controller';
+import { getProfile, checkAuth } from '../controllers/auth.controller.js';
+import authenticateUser from '../middleware/auth.middleware.js';
 
 const router = express.Router();
 
-router.post('/register', register);
-router.post('/login', login);
+// Auth0 profile endpoint - requires authentication
+router.get('/profile', authenticateUser, getProfile);
+
+// Check authentication status - requires authentication
+router.get('/me', authenticateUser, checkAuth);
 
 export default router; 

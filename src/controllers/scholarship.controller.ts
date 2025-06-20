@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
-import Scholarship, { IScholarship } from '../models/Scholarship';
+import Scholarship from '../models/Scholarship.js';
+import type { IScholarship } from '../models/Scholarship.js';
 
 export const getAllScholarships = async (req: Request, res: Response) => {
   try {

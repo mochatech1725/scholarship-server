@@ -1,37 +1,64 @@
-import mongoose, { Document, Schema } from 'mongoose';
+import mongoose, { Schema } from 'mongoose';
+import type { Document } from 'mongoose';
 
 export interface IScholarship extends Document {
-  title: string;
+  scholarshipId: string;
+  name: string;
+  organization: string;
   description: string;
   amount: number;
   deadline: Date;
-  requirements: string[];
-  createdAt: Date;
-  updatedAt: Date;
+  targetType: string;
+  theme: string;
+  requirements: string;
+  url: string;
+  isActive: boolean;
 }
 
 const ScholarshipSchema: Schema = new Schema({
-  title: {
+  scholarshipId: {
+    type: String,
+    required: true,
+    unique: true
+  },
+  name: {
+    type: String,
+    required: true,
+    trim: true
+  },
+  organization: {
     type: String,
     required: true,
     trim: true
   },
   description: {
     type: String,
-    required: true
   },
   amount: {
     type: Number,
-    required: true
   },
   deadline: {
     type: Date,
-    required: true
   },
-  requirements: [{
+  targetType: {
     type: String,
-    required: true
-  }]
+    trim: true
+  },
+  theme: {
+    type: String,
+    trim: true
+  },
+  requirements: {
+    type: String,
+  },
+  url: {
+    type: String,
+    trim: true
+  },
+  isActive: {
+    type: Boolean,
+    default: true
+  }
 }, {
   timestamps: true
 });

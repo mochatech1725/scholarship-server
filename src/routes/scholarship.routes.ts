@@ -5,7 +5,7 @@ import {
   createScholarship,
   updateScholarship,
   deleteScholarship
-} from '../controllers/scholarship.controller';
+} from '../controllers/scholarship.controller.js';
 
 const router = express.Router();
 

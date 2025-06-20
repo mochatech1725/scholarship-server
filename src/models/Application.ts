@@ -1,40 +1,39 @@
 import mongoose, { Document, Schema } from 'mongoose';
-import { IRecommendation } from './Recommendation';
-import { IEssay } from './Essay';
+
+export type ApplicationStatus = 'Not Started' | 'In Progress' | 'Submitted' | 'Awarded' | 'Not Awarded';
+export type TargetType = 'Merit' | 'Need' | 'Both';
 
 export interface IApplication extends Document {
-  scholarshipId: mongoose.Types.ObjectId;
-  studentId: mongoose.Types.ObjectId;
+  applicationId: string;
+  studentId: string;
   scholarshipName: string;
-  targetType: string;
+  targetType: TargetType;
   company: string;
   companyWebsite: string;
   platform: string;
   applicationLink: string;
   theme: string;
   amount: number;
+  requirements: string;
   renewable: boolean;
-  recommendations: IRecommendation[];
-  essays: IEssay[];
   documentInfoLink: string;
   currentAction: string;
-  status: string;
-  submissionDate?: Date;
+  status: ApplicationStatus;
+  essays: mongoose.Types.ObjectId[];
+  recommendations: mongoose.Types.ObjectId[];
+  submissionDate: Date;
   openDate: Date;
   dueDate: Date;
-  createdAt: Date;
-  updatedAt: Date;
 }
 
 const ApplicationSchema: Schema = new Schema({
-  scholarshipId: {
-    type: Schema.Types.ObjectId,
-    ref: 'Scholarship',
-    required: true
+  applicationId: {
+    type: String,
+    required: true,
+    unique: true
   },
   studentId: {
-    type: Schema.Types.ObjectId,
-    ref: 'Person',
+    type: String,
     required: true
   },
   scholarshipName: {
@@ -44,8 +43,7 @@ const ApplicationSchema: Schema = new Schema({
   },
   targetType: {
     type: String,
-    required: true,
-    enum: ['merit', 'need', 'both']
+    enum: ['Merit', 'Need', 'Both']
   },
   company: {
     type: String,
@@ -58,50 +56,48 @@ const ApplicationSchema: Schema = new Schema({
   },
   platform: {
     type: String,
-    required: true,
     trim: true
   },
   applicationLink: {
     type: String,
-    required: true,
     trim: true
   },
   theme: {
     type: String,
-    required: true,
     trim: true
   },
   amount: {
     type: Number,
-    required: true
+  },
+  requirements: {
+    type: String,
+    trim: true
   },
   renewable: {
     type: Boolean,
     default: false
   },
-  recommendations: [{
-    type: Schema.Types.ObjectId,
-    ref: 'Recommendation'
-  }],
-  essays: [{
-    type: Schema.Types.ObjectId,
-    ref: 'Essay'
-  }],
   documentInfoLink: {
     type: String,
     trim: true
   },
   currentAction: {
     type: String,
-    required: true,
     trim: true
   },
   status: {
     type: String,
-    required: true,
-    enum: ['draft', 'in_progress', 'submitted', 'awarded', 'rejected'],
-    default: 'draft'
+    enum: ['Not Started', 'In Progress', 'Submitted', 'Awarded', 'Not Awarded'],
+    default: 'Not Started'
   },
+  essays: [{
+    type: Schema.Types.ObjectId,
+    ref: 'Essay'
+  }],
+  recommendations: [{
+    type: Schema.Types.ObjectId,
+    ref: 'Recommendation'
+  }],
   submissionDate: {
     type: Date
   },

@@ -1,90 +1,69 @@
 import { Request, Response } from 'express';
-import bcrypt from 'bcryptjs';
-import jwt from 'jsonwebtoken';
-import Person, { IPerson } from '../models/Person';
-import { JwtPayload } from '../types';
+import Person from '../models/Person.js';
+import type { IPerson } from '../models/Person.js';
 
-export const register = async (req: Request, res: Response) => {
+// Auth0 profile endpoint
+export const getProfile = async (req: Request, res: Response) => {
   try {
-    const { firstName, lastName, emailAddress, phoneNumber, password } = req.body;
-
-    // Check if user already exists
-    const existingUser = await Person.findOne({ emailAddress });
-    if (existingUser) {
-      return res.status(400).json({ message: 'User already exists' });
+    // The user is already authenticated via Auth0 middleware
+    const auth0User = req.auth?.payload;
+    
+    if (!auth0User) {
+      return res.status(401).json({ message: 'User not authenticated' });
     }
 
-    // Hash password
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(password, salt);
+    // Find or create user in our database based on Auth0 sub
+    let user = await Person.findOne({ auth0Id: auth0User.sub });
+    
+    if (!user) {
+      // Create new user record if they don't exist
+      user = new Person({
+        auth0Id: auth0User.sub,
+        firstName: auth0User.given_name || '',
+        lastName: auth0User.family_name || '',
+        emailAddress: auth0User.email || '',
+        // Note: We don't store password since Auth0 handles authentication
+      });
+      
+      await user.save();
+    }
 
-    // Create new user
-    const user = new Person({
-      firstName,
-      lastName,
-      emailAddress,
-      phoneNumber,
-      password: hashedPassword
-    });
-
-    await user.save();
-
-    // Generate JWT token
-    const payload: JwtPayload = { userId: user._id.toString() };
-    const token = jwt.sign(
-      payload,
-      process.env.JWT_SECRET || 'your-secret-key',
-      { expiresIn: '24h' }
-    );
-
-    res.status(201).json({
-      token,
+    res.json({
       user: {
         id: user._id,
+        auth0Id: user.auth0Id,
         firstName: user.firstName,
         lastName: user.lastName,
-        emailAddress: user.emailAddress
-      }
+        emailAddress: user.emailAddress,
+        phoneNumber: user.phoneNumber
+      },
+      auth0Profile: auth0User
     });
   } catch (error) {
-    res.status(500).json({ message: 'Error registering user', error });
+    console.error('Error getting profile:', error);
+    res.status(500).json({ message: 'Error retrieving profile', error });
   }
 };
 
-export const login = async (req: Request, res: Response) => {
+// Check authentication status
+export const checkAuth = async (req: Request, res: Response) => {
   try {
-    const { emailAddress, password } = req.body;
-
-    // Find user
-    const user = await Person.findOne({ emailAddress });
-    if (!user) {
-      return res.status(400).json({ message: 'Invalid credentials' });
+    const auth0User = req.auth?.payload;
+    
+    if (!auth0User) {
+      return res.status(401).json({ 
+        message: 'User not authenticated',
+        authenticated: false 
+      });
     }
 
-    // Check password
-    const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) {
-      return res.status(400).json({ message: 'Invalid credentials' });
-    }
-
-    // Generate JWT token
-    const payload: JwtPayload = { userId: user._id.toString() };
-    const token = jwt.sign(
-      payload,
-      process.env.JWT_SECRET || 'your-secret-key',
-      { expiresIn: '24h' }
-    );
-
-    res.json({
-      token,
-      user: {
-        id: user._id,
-        firstName: user.firstName,
-        lastName: user.lastName,
-        emailAddress: user.emailAddress
-      }
+    res.json({ 
+      message: 'User is authenticated',
+      authenticated: true,
+      user: auth0User 
     });
   } catch (error) {
-    res.status(500).json({ message: 'Error logging in', error });
+    console.error('Error checking auth:', error);
+    res.status(500).json({ message: 'Error checking authentication', error });
   }
-}; 
+};
