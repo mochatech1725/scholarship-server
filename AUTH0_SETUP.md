@@ -81,7 +81,7 @@ APP_SECRET=your-super-secret-key-at-least-32-characters-long
 ### Protected Endpoints (require Auth0 token)
 - `GET /api/auth/profile` - Get user profile
 - `GET /api/auth/me` - Check authentication status
-- `GET /api/scholarships` - Get scholarships (protected)
+- `GET /api/applications` - Get applications (protected)
 
 ## Authentication Flow
 

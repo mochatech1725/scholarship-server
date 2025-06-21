@@ -82,12 +82,12 @@ npm start
 - `GET /api/auth/profile` - Get user profile (requires Auth0 token)
 - `GET /api/auth/me` - Check authentication status (requires Auth0 token)
 
-### Scholarships (Protected - requires Auth0 token)
-- `GET /api/scholarships` - Get all scholarships
-- `GET /api/scholarships/:id` - Get a specific scholarship
-- `POST /api/scholarships` - Create a new scholarship
-- `PUT /api/scholarships/:id` - Update a scholarship
-- `DELETE /api/scholarships/:id` - Delete a scholarship
+### Applications (Protected - requires Auth0 token)
+- `GET /api/applications` - Get all applications
+- `GET /api/applications/:id` - Get a specific application
+- `POST /api/applications` - Create a new application
+- `PUT /api/applications/:id` - Update an application
+- `DELETE /api/applications/:id` - Delete an application
 
 ## Authentication
 
@@ -109,7 +109,8 @@ scholarship-server/
 │   │   └── databaseConfig.ts
 │   ├── controllers/
 │   │   ├── auth.controller.ts
-│   │   └── scholarship.controller.ts
+│   │   ├── application.controller.ts
+│   │   └── user.controller.ts
 │   ├── middleware/
 │   │   └── auth.middleware.ts
 │   ├── models/
@@ -117,7 +118,8 @@ scholarship-server/
 │   │   └── Scholarship.ts
 │   ├── routes/
 │   │   ├── auth.routes.ts
-│   │   └── scholarship.routes.ts
+│   │   ├── application.routes.ts
+│   │   └── users.routes.ts
 │   ├── types/
 │   ├── errors/
 │   └── index.ts

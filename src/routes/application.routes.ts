@@ -5,8 +5,8 @@ import {
   getById,
   create,
   update,
-  deleteScholarship
-} from '../controllers/scholarship.controller.js';
+  deleteApplication
+} from '../controllers/application.controller.js';
 
 const router = express.Router();
 
@@ -15,6 +15,6 @@ router.get('/:id', getById);
 router.get('/:userId', getByUserId);
 router.post('/', create);
 router.put('/:id', update);
-router.delete('/:id', deleteScholarship);
+router.delete('/:id', deleteApplication);
 
 export default router; 
