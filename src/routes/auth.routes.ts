@@ -11,15 +11,6 @@ router.use((req, res, next) => {
   next();
 });
 
-// Test route without authentication
-router.get('/test', (req, res) => {
-  res.json({ 
-    message: 'Auth route is working', 
-    timestamp: new Date().toISOString(),
-    path: req.path,
-    method: req.method
-  });
-});
 
 // Auth0 login endpoint - requires authentication
 router.get('/login', authenticateUser, login);
