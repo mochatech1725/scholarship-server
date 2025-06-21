@@ -1,47 +1,50 @@
 import { Request, Response } from 'express';
-import Person from '../models/Person.js';
-import type { IPerson } from '../models/Person.js';
+import User from '../models/User.js';
 
 // Auth0 profile endpoint
 export const getProfile = async (req: Request, res: Response) => {
+  console.log('getProfile called');
+  console.log('req.auth:', req.auth);
+  console.log('req.auth?.payload:', req.auth?.payload);
+  
   try {
     // The user is already authenticated via Auth0 middleware
     const auth0User = req.auth?.payload;
     
     if (!auth0User) {
+      console.log('No auth0User found, returning 401');
       return res.status(401).json({ message: 'User not authenticated' });
     }
 
     // Find or create user in our database based on Auth0 sub
-    let user = await Person.findOne({ auth0Id: auth0User.sub });
-    
+    let user = await User.findOne({ userId: auth0User.sub });
+    console.log('Database query result:', user);
+
     if (!user) {
-      // Create new user record if they don't exist
-      user = new Person({
-        auth0Id: auth0User.sub,
-        firstName: auth0User.given_name || '',
-        lastName: auth0User.family_name || '',
-        emailAddress: auth0User.email || '',
-        // Note: We don't store password since Auth0 handles authentication
+      console.log('No user found for auth0Id:', auth0User.sub);
+      return res.status(404).json({ 
+        message: 'User not found in database',
+        auth0Sub: auth0User.sub
       });
-      
-      await user.save();
+    } else {
+      console.log('Existing user found:', user._id);
     }
 
-    res.json({
+    const response = {
       user: {
-        id: user._id,
-        auth0Id: user.auth0Id,
-        firstName: user.firstName,
-        lastName: user.lastName,
-        emailAddress: user.emailAddress,
-        phoneNumber: user.phoneNumber
+        ...user.toObject()
       },
       auth0Profile: auth0User
-    });
+    };
+
+    console.log('Sending response:', response);
+    console.log('Response JSON:', JSON.stringify(response, null, 2));
+    
+    res.json(response);
+    console.log('Response sent successfully');
   } catch (error) {
     console.error('Error getting profile:', error);
-    res.status(500).json({ message: 'Error retrieving profile', error });
+    res.status(500).json({ message: 'Error retrieving profile', error: error instanceof Error ? error.message : 'Unknown error' });
   }
 };
 
@@ -64,6 +67,6 @@ export const checkAuth = async (req: Request, res: Response) => {
     });
   } catch (error) {
     console.error('Error checking auth:', error);
-    res.status(500).json({ message: 'Error checking authentication', error });
+    res.status(500).json({ message: 'Error checking authentication', error: error instanceof Error ? error.message : 'Unknown error' });
   }
 };

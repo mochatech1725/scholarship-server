@@ -113,7 +113,7 @@ scholarship-server/
 │   ├── middleware/
 │   │   └── auth.middleware.ts
 │   ├── models/
-│   │   ├── Person.ts
+│   │   ├── User.ts
 │   │   └── Scholarship.ts
 │   ├── routes/
 │   │   ├── auth.routes.ts

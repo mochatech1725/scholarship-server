@@ -2,7 +2,6 @@ import mongoose, { Schema } from 'mongoose';
 import type { Document } from 'mongoose';
 
 export interface IProfile {
-  userId: string;
   userPreferences: {
     searchPreferences: {
       educationLevel: string;
@@ -13,8 +12,8 @@ export interface IProfile {
   };
 }
 
-export interface IPerson extends Document {
-  auth0Id?: string;
+export interface IUser extends Document {
+  userId?: string;
   firstName: string;
   lastName: string;
   emailAddress: string;
@@ -24,10 +23,6 @@ export interface IPerson extends Document {
 }
 
 const ProfileSchema: Schema = new Schema({
-  userId: {
-    type: String,
-    required: true
-  },
   userPreferences: {
     searchPreferences: {
       educationLevel: {
@@ -50,8 +45,8 @@ const ProfileSchema: Schema = new Schema({
   }
 });
 
-const PersonSchema: Schema = new Schema({
-  auth0Id: {
+const UserSchema: Schema = new Schema({
+  userId: {
     type: String,
     unique: true,
     sparse: true,
@@ -86,4 +81,4 @@ const PersonSchema: Schema = new Schema({
   timestamps: true
 });
 
-export default mongoose.model<IPerson>('Person', PersonSchema); 
+export default mongoose.model<IUser>('User', UserSchema); 
