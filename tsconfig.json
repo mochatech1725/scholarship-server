@@ -16,7 +16,8 @@
       "*": ["node_modules/*"]
     },
     "sourceMap": true,
-    "inlineSourceMap": false
+    "inlineSourceMap": false,
+    "inlineSources": true
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist"]

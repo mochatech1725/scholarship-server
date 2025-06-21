@@ -4,6 +4,7 @@ import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
 import dotenv from 'dotenv';
+import session from 'express-session';
 import scholarshipRoutes from './routes/scholarship.routes.js';
 import authRoutes from './routes/auth.routes.js';
 import authenticateUser from './middleware/auth.middleware.js';
@@ -12,6 +13,13 @@ import auth0Config from './config/auth0.config.js';
 
 // Load environment variables
 dotenv.config();
+
+console.log('Starting application...');
+
+// Validate required environment variables
+if (!process.env.APP_SECRET) {
+  throw new Error('APP_SECRET environment variable is required');
+}
 
 const app: Express = express();
 const port = auth0Config.port;
@@ -39,6 +47,18 @@ const corsOptions = {
 };
 
 app.use(cors(corsOptions));
+
+// Session configuration
+app.use(session({
+  secret: process.env.APP_SECRET,
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    secure: process.env.NODE_ENV === 'production',
+    httpOnly: true,
+    maxAge: 24 * 60 * 60 * 1000 // 24 hours
+  }
+}));
 
 app.use(helmet());
 app.use(express.json());

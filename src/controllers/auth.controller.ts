@@ -3,8 +3,6 @@ import User from '../models/User.js';
 
 export const login = async (req: Request, res: Response) => {
   console.log('login called');
-  console.log('req.auth:', req.auth);
-  console.log('req.auth?.payload:', req.auth?.payload);
   
   try {
     // The user is already authenticated via Auth0 middleware
@@ -17,7 +15,6 @@ export const login = async (req: Request, res: Response) => {
 
     // Find or create user in our database based on Auth0 sub
     let user = await User.findOne({ userId: auth0User.sub });
-    console.log('Database query result:', user);
 
     if (!user) {
       console.log('No user found for auth0Id:', auth0User.sub);
@@ -36,6 +33,11 @@ export const login = async (req: Request, res: Response) => {
       auth0Profile: auth0User
     };
 
+    // Store user in session
+    req.session.userId = user.userId;
+    req.session.user = user.toObject();
+    req.session.auth0Sub = auth0User.sub;
+
     // console.log('Sending response:', response);
     // console.log('Response JSON:', JSON.stringify(response, null, 2));
     
@@ -48,4 +50,18 @@ export const login = async (req: Request, res: Response) => {
 };
 
 export const logout = async (req: Request, res: Response) => {
-}
+  try {
+    // Clear session data
+    req.session.destroy((err) => {
+      if (err) {
+        console.error('Error destroying session:', err);
+        return res.status(500).json({ message: 'Error during logout' });
+      }
+      
+      res.json({ message: 'Logged out successfully' });
+    });
+  } catch (error) {
+    console.error('Error during logout:', error);
+    res.status(500).json({ message: 'Error during logout' });
+  }
+};
