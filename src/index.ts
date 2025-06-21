@@ -40,52 +40,6 @@ const corsOptions = {
 
 app.use(cors(corsOptions));
 
-// Debug middleware to log all requests
-app.use((req: Request, res: Response, next: NextFunction) => {
-  const origin = req.headers.origin;
-  
-  // console.log(`=== REQUEST RECEIVED ===`);
-  // console.log(`${req.method} ${req.path}`);
-  // console.log('Headers:', {
-  //   origin: origin,
-  //   isLocalhost: origin?.includes('localhost') || origin?.includes('127.0.0.1'),
-  //   authorization: req.headers.authorization ? 'present' : 'missing',
-  //   'content-type': req.headers['content-type'],
-  //   'user-agent': req.headers['user-agent']
-  // });
-  // console.log('URL:', req.url);
-  // console.log('Base URL:', req.baseUrl);
-  // console.log('Original URL:', req.originalUrl);
-  // console.log(`=======================`);
-  next();
-});
-
-// Response logging middleware
-app.use((req: Request, res: Response, next: NextFunction) => {
-  const originalSend = res.send;
-  res.send = function(data) {
-    console.log(`=== RESPONSE SENT ===`);
-    console.log(`Status: ${res.statusCode}`);
-    console.log(`Headers:`, res.getHeaders());
-    console.log(`Data type:`, typeof data);
-    console.log(`Data preview:`, typeof data === 'string' ? data.substring(0, 100) : data);
-    console.log(`=====================`);
-    return originalSend.call(this, data);
-  };
-  next();
-});
-
-// Cache control middleware for API routes
-app.use('/api', (req: Request, res: Response, next: NextFunction) => {
-  res.set({
-    'Cache-Control': 'no-cache, no-store, must-revalidate',
-    'Pragma': 'no-cache',
-    'Expires': '0',
-    'Content-Type': 'application/json'
-  });
-  next();
-});
-
 app.use(helmet());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -117,35 +71,11 @@ app.get('/health', (req: Request, res: Response) => {
   });
 });
 
-// Test Auth0 config route (no authentication required)
-app.get('/test-auth0-config', (req: Request, res: Response) => {
-  res.json({
-    auth0Config: {
-      audience: auth0Config.audience,
-      issuerBaseURL: auth0Config.issuerBaseUrl,
-      hasAudience: !!auth0Config.audience,
-      hasIssuer: !!auth0Config.issuerBaseUrl,
-      env: auth0Config.env,
-      debug: auth0Config.debug
-    },
-    message: 'Auth0 configuration check'
-  });
-});
-
 // Basic route
 app.get('/', (req: Request, res: Response) => {
   res.json({ message: 'Welcome to Scholarship Server API with Auth0 Integration' });
 });
 
-// Simple test route
-app.get('/test', (req: Request, res: Response) => {
-  res.json({ 
-    message: 'Server is working!', 
-    timestamp: new Date().toISOString(),
-    method: req.method,
-    path: req.path
-  });
-});
 
 // 404 handler - ensure JSON response
 app.use((req: Request, res: Response) => {
