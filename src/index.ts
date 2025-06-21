@@ -41,24 +41,24 @@ const corsOptions = {
 app.use(cors(corsOptions));
 
 // Debug middleware to log all requests
-// app.use((req: Request, res: Response, next: NextFunction) => {
-//   const origin = req.headers.origin;
+app.use((req: Request, res: Response, next: NextFunction) => {
+  const origin = req.headers.origin;
   
-//   console.log(`=== REQUEST RECEIVED ===`);
-//   console.log(`${req.method} ${req.path}`);
-//   console.log('Headers:', {
-//     origin: origin,
-//     isLocalhost: origin?.includes('localhost') || origin?.includes('127.0.0.1'),
-//     authorization: req.headers.authorization ? 'present' : 'missing',
-//     'content-type': req.headers['content-type'],
-//     'user-agent': req.headers['user-agent']
-//   });
-//   console.log('URL:', req.url);
-//   console.log('Base URL:', req.baseUrl);
-//   console.log('Original URL:', req.originalUrl);
-//   console.log(`=======================`);
-//   next();
-// });
+  // console.log(`=== REQUEST RECEIVED ===`);
+  // console.log(`${req.method} ${req.path}`);
+  // console.log('Headers:', {
+  //   origin: origin,
+  //   isLocalhost: origin?.includes('localhost') || origin?.includes('127.0.0.1'),
+  //   authorization: req.headers.authorization ? 'present' : 'missing',
+  //   'content-type': req.headers['content-type'],
+  //   'user-agent': req.headers['user-agent']
+  // });
+  // console.log('URL:', req.url);
+  // console.log('Base URL:', req.baseUrl);
+  // console.log('Original URL:', req.originalUrl);
+  // console.log(`=======================`);
+  next();
+});
 
 // Response logging middleware
 app.use((req: Request, res: Response, next: NextFunction) => {
