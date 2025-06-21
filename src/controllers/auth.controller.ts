@@ -36,11 +36,11 @@ export const login = async (req: Request, res: Response) => {
       auth0Profile: auth0User
     };
 
-    console.log('Sending response:', response);
-    console.log('Response JSON:', JSON.stringify(response, null, 2));
+    // console.log('Sending response:', response);
+    // console.log('Response JSON:', JSON.stringify(response, null, 2));
     
     res.json(response);
-    console.log('Response sent successfully');
+    //console.log('Response sent successfully');
   } catch (error) {
     console.error('Error getting profile:', error);
     res.status(500).json({ message: 'Error retrieving profile', error: error instanceof Error ? error.message : 'Unknown error' });
