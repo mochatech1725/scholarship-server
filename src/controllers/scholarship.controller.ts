@@ -1,8 +1,7 @@
 import { Request, Response } from 'express';
 import Scholarship from '../models/Scholarship.js';
-import type { IScholarship } from '../models/Scholarship.js';
 
-export const getAllScholarships = async (req: Request, res: Response) => {
+export const getAll = async (req: Request, res: Response) => {
   try {
     const scholarships = await Scholarship.find();
     res.json(scholarships);
@@ -11,7 +10,16 @@ export const getAllScholarships = async (req: Request, res: Response) => {
   }
 };
 
-export const getScholarshipById = async (req: Request, res: Response) => {
+export const getByUserId = async (req: Request, res: Response) => {
+  try {
+    const scholarships = await Scholarship.find({ userId: req.params.userId });
+    res.json(scholarships);
+  } catch (error) {
+    res.status(500).json({ message: 'Error fetching scholarships', error });
+  }
+};
+
+export const getById = async (req: Request, res: Response) => {
   try {
     const scholarship = await Scholarship.findById(req.params.id);
     if (!scholarship) {
@@ -23,7 +31,7 @@ export const getScholarshipById = async (req: Request, res: Response) => {
   }
 };
 
-export const createScholarship = async (req: Request, res: Response) => {
+export const create = async (req: Request, res: Response) => {
   try {
     const scholarship = new Scholarship(req.body);
     const savedScholarship = await scholarship.save();
@@ -33,7 +41,7 @@ export const createScholarship = async (req: Request, res: Response) => {
   }
 };
 
-export const updateScholarship = async (req: Request, res: Response) => {
+export const update = async (req: Request, res: Response) => {
   try {
     const scholarship = await Scholarship.findByIdAndUpdate(
       req.params.id,

@@ -6,6 +6,7 @@ import morgan from 'morgan';
 import dotenv from 'dotenv';
 import session from 'express-session';
 import scholarshipRoutes from './routes/scholarship.routes.js';
+import userRoutes from './routes/users.routes.js';
 import authRoutes from './routes/auth.routes.js';
 import authenticateUser from './middleware/auth.middleware.js';
 import { connectDB } from './config/databaseConfig.js';
@@ -81,6 +82,7 @@ app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/scholarships', authenticateUser, scholarshipRoutes);
+app.use('/api/users', authenticateUser, userRoutes);
 
 // Health check route
 app.get('/health', (req: Request, res: Response) => {

@@ -13,18 +13,18 @@ export const login = async (req: Request, res: Response) => {
       return res.status(401).json({ message: 'User not authenticated' });
     }
 
-    // Find or create user in our database based on Auth0 sub
-    let user = await User.findOne({ userId: auth0User.sub });
+    // Find user in our database based on Auth0 sub
+    const user = await User.findOne({ userId: auth0User.sub });
 
     if (!user) {
-      console.log('No user found for auth0Id:', auth0User.sub);
+      console.log('No user found for auth0Id:', auth0User.sub, '- returning 404');
       return res.status(404).json({ 
-        message: 'User not found in database',
-        auth0Sub: auth0User.sub
+        message: 'User not found. Please register first.',
+        error: 'USER_NOT_FOUND'
       });
-    } else {
-      console.log('Existing user found:', user._id);
     }
+
+    console.log('Existing user found:', user._id);
 
     const response = {
       user: {
@@ -63,5 +63,46 @@ export const logout = async (req: Request, res: Response) => {
   } catch (error) {
     console.error('Error during logout:', error);
     res.status(500).json({ message: 'Error during logout' });
+  }
+};
+
+export const createUser = async (req: Request, res: Response) => {
+  try {
+    const auth0User = req.auth?.payload;
+    
+    if (!auth0User) {
+      return res.status(401).json({ message: 'User not authenticated' });
+    }
+
+    // Check if user already exists
+    const existingUser = await User.findOne({ userId: auth0User.sub });
+    if (existingUser) {
+      return res.status(409).json({ message: 'User already exists' });
+    }
+
+    // Extract name parts safely
+    const auth0Name = typeof auth0User.name === 'string' ? auth0User.name : '';
+    const nameParts = auth0Name.split(' ');
+    const firstName = auth0User.given_name || nameParts[0] || '';
+    const lastName = auth0User.family_name || nameParts.slice(1).join(' ') || '';
+
+    // Create new user from Auth0 profile
+    const newUser = new User({
+      userId: auth0User.sub,
+      firstName,
+      lastName,
+      emailAddress: auth0User.email || '',
+      profile: req.body.profile || {} // Allow optional profile data
+    });
+
+    const savedUser = await newUser.save();
+    
+    res.status(201).json({
+      message: 'User created successfully',
+      user: savedUser.toObject()
+    });
+  } catch (error) {
+    console.error('Error creating user:', error);
+    res.status(500).json({ message: 'Error creating user', error: error instanceof Error ? error.message : 'Unknown error' });
   }
 };

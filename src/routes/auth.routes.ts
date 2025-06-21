@@ -1,5 +1,5 @@
 import express from 'express';
-import { login, logout } from '../controllers/auth.controller.js';
+import { login, logout, createUser } from '../controllers/auth.controller.js';
 import authenticateUser from '../middleware/auth.middleware.js';
 
 const router = express.Router();
@@ -14,6 +14,9 @@ router.use((req, res, next) => {
 
 // Auth0 login endpoint - requires authentication
 router.get('/login', authenticateUser, login);
+
+// Create new user endpoint - requires authentication
+router.post('/register', authenticateUser, createUser);
 
 router.post('/logout', logout);
 
