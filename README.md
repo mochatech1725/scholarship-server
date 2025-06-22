@@ -89,6 +89,14 @@ npm start
 - `PUT /api/applications/:id` - Update an application
 - `DELETE /api/applications/:id` - Delete an application
 
+### Recommenders (Protected - requires Auth0 token)
+- `GET /api/recommenders` - Get all recommenders
+- `GET /api/recommenders/:id` - Get a specific recommender
+- `GET /api/recommenders/:userId` - Get recommenders by user ID
+- `POST /api/recommenders` - Create a new recommender
+- `PUT /api/recommenders/:id` - Update a recommender
+- `DELETE /api/recommenders/:id` - Delete a recommender
+
 ## Authentication
 
 This application uses Auth0 for secure authentication. Users must:
@@ -110,6 +118,7 @@ scholarship-server/
 │   ├── controllers/
 │   │   ├── auth.controller.ts
 │   │   ├── application.controller.ts
+│   │   ├── recommender.controller.ts
 │   │   └── user.controller.ts
 │   ├── middleware/
 │   │   └── auth.middleware.ts
@@ -119,6 +128,7 @@ scholarship-server/
 │   ├── routes/
 │   │   ├── auth.routes.ts
 │   │   ├── application.routes.ts
+│   │   ├── recommender.routes.ts
 │   │   └── users.routes.ts
 │   ├── types/
 │   ├── errors/

@@ -1,6 +1,7 @@
 import mongoose, { Document, Schema } from 'mongoose';
 
 export interface IRecommender extends Document {
+  studentId: string;
   firstName: string;
   lastName: string;
   relationship: string;
@@ -9,6 +10,11 @@ export interface IRecommender extends Document {
 }
 
 const RecommenderSchema: Schema = new Schema({
+  studentId: {
+    type: String,
+    required: true,
+    trim: true
+  },
   firstName: {
     type: String,
     required: true,

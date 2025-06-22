@@ -7,6 +7,7 @@ import dotenv from 'dotenv';
 import session from 'express-session';
 import applicationRoutes from './routes/application.routes.js';
 import userRoutes from './routes/users.routes.js';
+import recommenderRoutes from './routes/recommender.routes.js';
 import authRoutes from './routes/auth.routes.js';
 import authenticateUser from './middleware/auth.middleware.js';
 import { connectDB } from './config/databaseConfig.js';
@@ -83,6 +84,7 @@ app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/applications', authenticateUser, applicationRoutes);
 app.use('/api/users', authenticateUser, userRoutes);
+app.use('/api/recommenders', authenticateUser, recommenderRoutes);
 
 // Health check route
 app.get('/health', (req: Request, res: Response) => {

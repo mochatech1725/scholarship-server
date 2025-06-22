@@ -5,8 +5,8 @@ import {
   getById,
   create,
   update,
-  deleteApplication
-} from '../controllers/application.controller.js';
+  deleteRecommender
+} from '../controllers/recommender.controller.js';
 
 const router = express.Router();
 
@@ -15,6 +15,6 @@ router.get('/:id', getById);
 router.get('/getByUserId/:userId', getByUserId);
 router.post('/', create);
 router.put('/:id', update);
-router.delete('/:id', deleteApplication);
+router.delete('/:id', deleteRecommender);
 
 export default router; 

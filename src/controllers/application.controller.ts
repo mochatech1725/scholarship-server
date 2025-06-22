@@ -4,6 +4,7 @@ import Application from '../models/Application.js';
 export const getAll = async (req: Request, res: Response) => {
   try {
     const applications = await Application.find();
+    console.log(applications);
     res.json(applications);
   } catch (error) {
     res.status(500).json({ message: 'Error fetching applications', error });
