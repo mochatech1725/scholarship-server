@@ -137,7 +137,7 @@ const startServer = async () => {
       console.log(`Server is running on port ${port}`);
       console.log(`Environment: ${auth0Config.env}`);
       console.log(`Auth0 Integration: ${auth0Config.audience ? 'Enabled' : 'Disabled'}`);
-      console.log(`CORS Origin: ${process.env.CORS_ORIGIN || '*'}`);
+      console.log(`CORS Origins: ${corsOptions.origin.join(', ')}`);
     });
   } catch (error) {
     console.error('Failed to start server:', error);

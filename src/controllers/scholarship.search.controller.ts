@@ -1,10 +1,12 @@
 import { Request, Response } from 'express';
-import axios from 'axios';
+import dotenv from 'dotenv';
 // eventually maybe move this into RAG
 import { 
   ScholarshipSearchRequest
 } from '../types/scholarship.types.js';
 import AIScholarshipSearch from '../ai/ai.lib.js';
+
+dotenv.config();
 
 // Initialize AI service
 const aiService = new AIScholarshipSearch();
