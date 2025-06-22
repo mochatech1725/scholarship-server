@@ -1,15 +1,99 @@
 # Scholarship Server
 
-A TypeScript-based REST API server for managing scholarships, built with Express, MongoDB, and integrated with Auth0 for secure authentication.
+A comprehensive scholarship management server built with Express.js, TypeScript, and MongoDB, featuring Auth0 integration and AI-powered scholarship search capabilities.
 
-## Prerequisites
+## Features
 
-- Node.js (v14 or higher)
-- MongoDB (running locally or a MongoDB Atlas account)
-- npm or yarn package manager
-- Auth0 account (for authentication)
+- **User Authentication**: Secure authentication using Auth0
+- **Application Management**: Create, read, update, and delete scholarship applications
+- **Recommender System**: Manage recommendation letters and references
+- **AI-Powered Scholarship Search**: Intelligent search using OpenAI and RAG (Retrieval-Augmented Generation)
+- **RESTful API**: Clean, well-documented API endpoints
+- **TypeScript**: Full type safety and better development experience
+- **MongoDB**: Scalable NoSQL database
+- **Security**: Helmet, CORS, and session management
 
-## Setup
+## AI Scholarship Search Feature
+
+The application includes an advanced AI-powered scholarship search system that uses:
+
+- **OpenAI GPT-3.5-turbo** for intelligent analysis and ranking
+- **RAG (Retrieval-Augmented Generation)** approach with predefined scholarship websites
+- **Web scraping capabilities** (with rate limiting and respectful practices)
+- **Semantic search** based on user keywords
+- **Relevance scoring** for optimal results
+
+### Scholarship Search Endpoints
+
+#### POST `/api/scholarships/find`
+Search for scholarships using AI-powered analysis.
+
+**Request Body:**
+```json
+{
+  "keywords": ["computer science", "undergraduate", "women"],
+  "maxResults": 10,
+  "includeDeadlines": true,
+  "minAmount": 1000,
+  "maxAmount": 10000,
+  "useRealScraping": false
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "scholarships": [
+      {
+        "title": "Computer Science Excellence Scholarship",
+        "description": "Scholarship for students demonstrating excellence in computer science...",
+        "amount": "$5,000 - $10,000",
+        "deadline": "March 15, 2024",
+        "eligibility": "GPA 3.5+, Full-time student, Demonstrated leadership",
+        "source": "Scholarships.com",
+        "relevanceScore": 0.95
+      }
+    ],
+    "totalFound": 6,
+    "keywords": ["computer science", "undergraduate", "women"],
+    "searchTimestamp": "2024-01-15T10:30:00.000Z"
+  },
+  "metadata": {
+    "sourcesUsed": ["Scholarships.com", "Fastweb", "College Board", "Cappex", "Niche"],
+    "aiModel": "gpt-3.5-turbo",
+    "processingTime": "2024-01-15T10:30:05.000Z",
+    "realScrapingUsed": false
+  }
+}
+```
+
+#### GET `/api/scholarships/sources`
+Get available scholarship sources used by the AI search.
+
+#### GET `/api/scholarships/health`
+Check the health status of the AI service.
+
+### Supported Scholarship Sources
+
+The AI search system integrates with the following scholarship websites:
+
+1. **Scholarships.com** - Comprehensive scholarship database
+2. **Fastweb** - Leading scholarship search platform
+3. **College Board** - Official College Board scholarship search
+4. **Cappex** - Scholarship matching platform
+5. **Niche** - College and scholarship search platform
+
+### How the AI Search Works
+
+1. **Keyword Processing**: User keywords are analyzed for semantic meaning
+2. **Data Retrieval**: Scholarship data is gathered from multiple sources
+3. **AI Analysis**: OpenAI GPT-3.5-turbo analyzes and ranks scholarships by relevance
+4. **Filtering**: Results are filtered based on amount, deadlines, and other criteria
+5. **Ranking**: Scholarships are ranked by relevance score (0.0 to 1.0)
+
+## Installation
 
 1. Clone the repository:
 ```bash
@@ -22,17 +106,12 @@ cd scholarship-server
 npm install
 ```
 
-3. Set up Auth0:
-   - Follow the instructions in [AUTH0_SETUP.md](./AUTH0_SETUP.md)
-   - Create an Auth0 application and API
-   - Get your Auth0 credentials
-
-4. Create a `.env` file in the root directory:
+3. Set up environment variables:
 ```bash
 cp env.example .env
 ```
 
-5. Update the `.env` file with your configuration:
+4. Configure your environment variables in `.env`:
 ```env
 # Server Configuration
 NODE_ENV=development
@@ -48,118 +127,92 @@ CORS_ORIGIN=http://localhost:3000
 # Auth0 Configuration
 AUTH0_ISSUER_BASE_URL=https://your-tenant.auth0.com/
 AUTH0_AUDIENCE=https://your-api-identifier
-AUTH0_CLIENT_ID=your-client-id
-AUTH0_CLIENT_SECRET=your-client-secret
 
-# App Secret (at least 32 characters long)
+# OpenAI Configuration
+OPENAI_API_KEY=your-openai-api-key-here
+
+# App Secret
 APP_SECRET=your-super-secret-key-at-least-32-characters-long
 ```
 
-6. Build the project:
-```bash
-npm run build
-```
-
-## Running the Application
-
-Development mode:
+5. Start the development server:
 ```bash
 npm run dev
 ```
 
-Production mode:
-```bash
-npm start
-```
-
 ## API Endpoints
 
-### Public Endpoints
-- `GET /` - Welcome message
-- `GET /health` - Health check
+### Authentication
+- `POST /api/auth/login` - User login
+- `POST /api/auth/logout` - User logout
+- `GET /api/auth/profile` - Get user profile
 
-### Authentication (Auth0)
-- `GET /api/auth/profile` - Get user profile (requires Auth0 token)
-- `GET /api/auth/me` - Check authentication status (requires Auth0 token)
-
-### Applications (Protected - requires Auth0 token)
+### Applications
 - `GET /api/applications` - Get all applications
-- `GET /api/applications/:id` - Get a specific application
-- `POST /api/applications` - Create a new application
-- `PUT /api/applications/:id` - Update an application
-- `DELETE /api/applications/:id` - Delete an application
+- `GET /api/applications/:id` - Get application by ID
+- `POST /api/applications` - Create new application
+- `PUT /api/applications/:id` - Update application
+- `DELETE /api/applications/:id` - Delete application
 
-### Recommenders (Protected - requires Auth0 token)
+### Users
+- `GET /api/users` - Get all users
+- `GET /api/users/:id` - Get user by ID
+- `POST /api/users` - Create new user
+- `PUT /api/users/:id` - Update user
+- `DELETE /api/users/:id` - Delete user
+
+### Recommenders
 - `GET /api/recommenders` - Get all recommenders
-- `GET /api/recommenders/:id` - Get a specific recommender
-- `GET /api/recommenders/:userId` - Get recommenders by user ID
-- `POST /api/recommenders` - Create a new recommender
-- `PUT /api/recommenders/:id` - Update a recommender
-- `DELETE /api/recommenders/:id` - Delete a recommender
+- `GET /api/recommenders/:id` - Get recommender by ID
+- `GET /api/recommenders/getByUserId/:userId` - Get recommenders by user ID
+- `POST /api/recommenders` - Create new recommender
+- `PUT /api/recommenders/:id` - Update recommender
+- `DELETE /api/recommenders/:id` - Delete recommender
 
-## Authentication
+### AI Scholarship Search
+- `POST /api/scholarships/find` - Search for scholarships using AI
+- `GET /api/scholarships/sources` - Get available scholarship sources
+- `GET /api/scholarships/health` - Check AI service health
 
-This application uses Auth0 for secure authentication. Users must:
+## Development
 
-1. Log in through Auth0 (frontend integration required)
-2. Include the Auth0 access token in API requests:
-   ```
-   Authorization: Bearer <access_token>
-   ```
+### Scripts
+- `npm run dev` - Start development server with nodemon
+- `npm run build` - Build TypeScript to JavaScript
+- `npm start` - Start production server
+- `npm test` - Run tests
 
-## Project Structure
-
+### Project Structure
 ```
-scholarship-server/
-├── src/
-│   ├── config/
-│   │   ├── auth0.config.ts
-│   │   └── databaseConfig.ts
-│   ├── controllers/
-│   │   ├── auth.controller.ts
-│   │   ├── application.controller.ts
-│   │   ├── recommender.controller.ts
-│   │   └── user.controller.ts
-│   ├── middleware/
-│   │   └── auth.middleware.ts
-│   ├── models/
-│   │   ├── User.ts
-│   │   └── Scholarship.ts
-│   ├── routes/
-│   │   ├── auth.routes.ts
-│   │   ├── application.routes.ts
-│   │   ├── recommender.routes.ts
-│   │   └── users.routes.ts
-│   ├── types/
-│   ├── errors/
-│   └── index.ts
-├── env.example
-├── AUTH0_SETUP.md
-├── package.json
-├── tsconfig.json
-└── README.md
+src/
+├── controllers/          # Route controllers
+├── routes/              # API routes
+├── models/              # MongoDB models
+├── middleware/          # Custom middleware
+├── config/              # Configuration files
+├── types/               # TypeScript type definitions
+├── database/            # Database connection and setup
+├── errors/              # Error handling
+└── index.ts            # Main application file
 ```
-
-## Technologies Used
-
-- TypeScript
-- Express.js
-- MongoDB with Mongoose
-- Auth0 (authentication)
-- Node.js
-- CORS
-- Helmet (for security)
-- Morgan (request logging)
 
 ## Security Features
 
-- JWT token validation via Auth0
-- CORS protection
-- Helmet security headers
-- Request logging
-- No password storage (handled by Auth0)
+- **Auth0 Integration**: Secure authentication and authorization
+- **Helmet**: Security headers
+- **CORS**: Cross-origin resource sharing configuration
+- **Session Management**: Secure session handling
+- **Input Validation**: Request validation and sanitization
+- **Rate Limiting**: API rate limiting (for web scraping)
 
-## Documentation
+## Contributing
 
-- [Auth0 Setup Guide](./AUTH0_SETUP.md) - Detailed instructions for Auth0 configuration
-- [API Testing](./src/api-test.http) - HTTP requests for testing the API 
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Add tests if applicable
+5. Submit a pull request
+
+## License
+
+This project is licensed under the MIT License. 

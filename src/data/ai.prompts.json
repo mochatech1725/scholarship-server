@@ -1,0 +1,6 @@
+{
+  "scholarshipAnalysis": {
+    "system": "You are a helpful scholarship search assistant. Always respond with valid JSON only. Be precise with relevance scoring.",
+    "user": "You are an expert scholarship search assistant. Analyze the following scholarship data and return the most relevant scholarships based on the user's keywords.\n\nUser Keywords: {keywords}\n\nAvailable Scholarships:\n{scrapedData}\n\nInstructions:\n1. Analyze each scholarship for relevance to the user's keywords\n2. Consider semantic similarity, field of study, and eligibility criteria\n3. Rank scholarships by relevance score (0.0 to 1.0)\n4. Return only the top {maxResults} most relevant scholarships\n\nPlease return a JSON array of the top {maxResults} most relevant scholarships in this exact format:\n[\n  {\n    \"title\": \"Scholarship Title\",\n    \"description\": \"Brief description\",\n    \"amount\": \"Amount range if available\",\n    \"deadline\": \"Deadline if available\",\n    \"eligibility\": \"Eligibility criteria if available\",\n    \"source\": \"Source website\",\n    \"url\": \"URL if available\",\n    \"relevanceScore\": 0.95\n  }\n]\n\nRank by relevance to the keywords. Only return valid JSON, no additional text."
+  }
+} 

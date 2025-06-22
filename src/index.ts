@@ -9,6 +9,7 @@ import applicationRoutes from './routes/application.routes.js';
 import userRoutes from './routes/users.routes.js';
 import recommenderRoutes from './routes/recommender.routes.js';
 import authRoutes from './routes/auth.routes.js';
+import scholarshipSearchRoutes from './routes/scholarship.search.routes.js';
 import authenticateUser from './middleware/auth.middleware.js';
 import { connectDB } from './config/databaseConfig.js';
 import auth0Config from './config/auth0.config.js';
@@ -21,6 +22,10 @@ console.log('Starting application...');
 // Validate required environment variables
 if (!process.env.APP_SECRET) {
   throw new Error('APP_SECRET environment variable is required');
+}
+
+if (!process.env.OPENAI_API_KEY) {
+  throw new Error('OPENAI_API_KEY environment variable is required');
 }
 
 const app: Express = express();
@@ -85,6 +90,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/applications', authenticateUser, applicationRoutes);
 app.use('/api/users', authenticateUser, userRoutes);
 app.use('/api/recommenders', authenticateUser, recommenderRoutes);
+app.use('/api/scholarships', authenticateUser, scholarshipSearchRoutes);
 
 // Health check route
 app.get('/health', (req: Request, res: Response) => {

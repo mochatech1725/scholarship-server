@@ -1,5 +1,5 @@
 import { NextFunction, Request, Response } from "express";
-import { getErrorMessage } from "../utils";
+import { getErrorMessage } from "../utils/helper";
 import CustomError from "../errors/CustomError";
 import { UnauthorizedError } from "express-oauth2-jwt-bearer";
 

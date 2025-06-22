@@ -1,3 +1,62 @@
 ### GET profile
 GET http://localhost:3000/api/auth/profile HTTP/1.1
 Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6IlZEX0JHcDhQdklaYllDYWJ6QjdlcyJ9.eyJpc3MiOiJodHRwczovL2Rldi13ZHJzd2V1ZzJzZm03eWtwLnVzLmF1dGgwLmNvbS8iLCJzdWIiOiJhdXRoMHw2ODQ0ZDUxZWVjZGI3NTMyNTRlZDZkNTMiLCJhdWQiOlsic2Nob2xhcnNoaXAtYXBwLXRyYWNrZXItYXBpIiwiaHR0cHM6Ly9kZXYtd2Ryc3dldWcyc2ZtN3lrcC51cy5hdXRoMC5jb20vdXNlcmluZm8iXSwiaWF0IjoxNzUwNDQyMzY4LCJleHAiOjE3NTA0NDk1NjgsInNjb3BlIjoib3BlbmlkIGVtYWlsIiwiYXpwIjoiamkxTlJmVG95cDhvYmt1UWxUVnk4WlMwQjc2UWphY08ifQ.RB-gJqiKggBKvBmOGEM8UH4UWzcUUa1yNbhxeuJ6oCB0MV3cDicLiab8Hk5BWmQFp4uStOZ2__nvW5BTO2OKmcG_desAosY8u8lg_CnZ9yW9RWLJEbG240vdXk8fCMwnFxQLHcFstm-aCFNxphEGny1eZopHpQz4l0RZGYVwRhoRiIg3vRHOHgCyr_dfffKx2uRO1kVx2TKv0EB-iPxCi394YtlCla7w6o1jKbr8l8X_Hp8SpY4BwcdXkwIHslHg7EjfaN5tiBlowssQ_BnDpkFdvtMTiX4D1yZCqTGKNneIHmpX139hYe4hF0ST6MzoNGN44I2aQEN0mUNIXAyT8A
+
+### Health Check
+GET http://localhost:3000/health
+
+### AI Scholarship Search Examples
+
+### Search for Computer Science Scholarships
+POST http://localhost:3000/api/scholarships/find
+Content-Type: application/json
+Authorization: Bearer YOUR_AUTH0_TOKEN
+
+{
+  "keywords": ["computer science", "undergraduate", "women"],
+  "maxResults": 5,
+  "includeDeadlines": true,
+  "minAmount": 1000,
+  "maxAmount": 10000
+}
+
+### Search for STEM Scholarships
+POST http://localhost:3000/api/scholarships/find
+Content-Type: application/json
+Authorization: Bearer YOUR_AUTH0_TOKEN
+
+{
+  "keywords": ["STEM", "engineering", "research"],
+  "maxResults": 10,
+  "includeDeadlines": true
+}
+
+### Search for Leadership Scholarships
+POST http://localhost:3000/api/scholarships/find
+Content-Type: application/json
+Authorization: Bearer YOUR_AUTH0_TOKEN
+
+{
+  "keywords": ["leadership", "community service", "volunteer"],
+  "maxResults": 8,
+  "includeDeadlines": false
+}
+
+### Get Available Scholarship Sources
+GET http://localhost:3000/api/scholarships/sources
+Authorization: Bearer YOUR_AUTH0_TOKEN
+
+### Check AI Service Health
+GET http://localhost:3000/api/scholarships/health
+Authorization: Bearer YOUR_AUTH0_TOKEN
+
+### Test with Real Scraping (use with caution)
+POST http://localhost:3000/api/scholarships/find
+Content-Type: application/json
+Authorization: Bearer YOUR_AUTH0_TOKEN
+
+{
+  "keywords": ["academic excellence", "merit"],
+  "maxResults": 3,
+  "useRealScraping": true
+}
