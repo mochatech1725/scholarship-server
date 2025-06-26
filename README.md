@@ -11,7 +11,7 @@ A comprehensive scholarship management server built with Express.js, TypeScript,
 - **RESTful API**: Clean, well-documented API endpoints
 - **TypeScript**: Full type safety and better development experience
 - **MongoDB**: Scalable NoSQL database
-- **Security**: Helmet, CORS, and session management
+- **Security**: Helmet, CORS
 
 ## AI Scholarship Search Feature
 
@@ -201,7 +201,6 @@ src/
 - **Auth0 Integration**: Secure authentication and authorization
 - **Helmet**: Security headers
 - **CORS**: Cross-origin resource sharing configuration
-- **Session Management**: Secure session handling
 - **Input Validation**: Request validation and sanitization
 - **Rate Limiting**: API rate limiting (for web scraping)
 

@@ -16,10 +16,10 @@ Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6IlZEX0JHcDhQdk
 
 {
   "keywords": ["computer science", "undergraduate", "women"],
-  "maxResults": 5,
+  "maxResults": 20,
   "includeDeadlines": true,
-  "minAmount": 1000,
-  "maxAmount": 10000
+  # "minAmount": 1000,
+  # "maxAmount": 10000
 }
 
 ### Search for STEM Scholarships
@@ -29,7 +29,7 @@ Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6IlZEX0JHcDhQdk
 
 {
   "keywords": ["STEM", "engineering", "research"],
-  "maxResults": 10,
+  "maxResults": 20,
   "includeDeadlines": true
 }
 

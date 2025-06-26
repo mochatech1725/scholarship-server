@@ -4,13 +4,13 @@ import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
 import dotenv from 'dotenv';
-import session from 'express-session';
 import applicationRoutes from './routes/application.routes.js';
-import userRoutes from './routes/users.routes.js';
+import userRoutes from './routes/user.routes.js';
 import recommenderRoutes from './routes/recommender.routes.js';
 import authRoutes from './routes/auth.routes.js';
 import scholarshipSearchRoutes from './routes/scholarship.search.routes.js';
 import authenticateUser from './middleware/auth.middleware.js';
+import { apiLimiter, authLimiter, searchLimiter } from './middleware/rate-limit.middleware.js';
 import { connectDB } from './config/databaseConfig.js';
 import auth0Config from './config/auth0.config.js';
 
@@ -20,10 +20,6 @@ dotenv.config();
 console.log('Starting application...');
 
 // Validate required environment variables
-if (!process.env.APP_SECRET) {
-  throw new Error('APP_SECRET environment variable is required');
-}
-
 if (!process.env.OPENAI_API_KEY) {
   throw new Error('OPENAI_API_KEY environment variable is required');
 }
@@ -55,21 +51,14 @@ const corsOptions = {
 
 app.use(cors(corsOptions));
 
-// Session configuration
-app.use(session({
-  secret: process.env.APP_SECRET,
-  resave: false,
-  saveUninitialized: false,
-  cookie: {
-    secure: process.env.NODE_ENV === 'production',
-    httpOnly: true,
-    maxAge: 24 * 60 * 60 * 1000 // 24 hours
-  }
-}));
-
 app.use(helmet());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Apply rate limiting
+app.use('/api/', apiLimiter); // General API rate limiting
+app.use('/api/auth', authLimiter); // Stricter auth rate limiting
+app.use('/api/scholarships', searchLimiter); // Search rate limiting
 
 // Global error handler to ensure JSON responses
 app.use((err: Error, req: Request, res: Response, next: NextFunction) => {

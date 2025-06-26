@@ -33,11 +33,6 @@ export const login = async (req: Request, res: Response) => {
       auth0Profile: auth0User
     };
 
-    // Store user in session
-    req.session.userId = user.userId;
-    req.session.user = user.toObject();
-    req.session.auth0Sub = auth0User.sub;
-
     // console.log('Sending response:', response);
     // console.log('Response JSON:', JSON.stringify(response, null, 2));
     
@@ -51,14 +46,11 @@ export const login = async (req: Request, res: Response) => {
 
 export const logout = async (req: Request, res: Response) => {
   try {
-    // Clear session data
-    req.session.destroy((err) => {
-      if (err) {
-        console.error('Error destroying session:', err);
-        return res.status(500).json({ message: 'Error during logout' });
-      }
-      
-      res.json({ message: 'Logged out successfully' });
+    // With JWT authentication, logout is handled client-side
+    // The client should discard the JWT token
+    res.json({ 
+      message: 'Logged out successfully',
+      note: 'Please discard your JWT token on the client side'
     });
   } catch (error) {
     console.error('Error during logout:', error);
