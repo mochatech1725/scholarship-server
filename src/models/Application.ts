@@ -53,7 +53,6 @@ const EmbeddedRecommendationSchema = new Schema({
 });
 
 export interface IApplication extends Document {
-  applicationId: string;
   studentId: string;
   scholarshipName: string;
   targetType: TargetType;
@@ -77,11 +76,6 @@ export interface IApplication extends Document {
 }
 
 const ApplicationSchema: Schema = new Schema({
-  applicationId: {
-    type: String,
-    required: true,
-    unique: true
-  },
   studentId: {
     type: String,
     required: true
