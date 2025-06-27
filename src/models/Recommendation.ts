@@ -29,15 +29,15 @@ const RecommendationSchema: Schema = new Schema({
   submissionMethod: {
     type: String,
     enum: SUBMISSION_METHODS,
-    required: true
+    default: 'DirectEmail'
   },
   requestDate: {
     type: Date,
-    required: true
+    default: null
   },
   dueDate: {
     type: Date,
-    required: true
+    default: null
   },
   submissionDate: {
     type: Date,
