@@ -3,7 +3,11 @@ import Application from '../models/Application.js';
 
 export const getAll = async (req: Request, res: Response) => {
   try {
-    const applications = await Application.find();
+    const applications = await Application.find()
+      .populate({
+        path: 'recommendations.recommender',
+        model: 'Recommender'
+      });
     console.log(applications);
     res.json(applications);
   } catch (error) {
@@ -15,11 +19,13 @@ export const getByUserId = async (req: Request, res: Response) => {
   try {
     console.log('Fetching applications for userId:', req.params.userId);
     
-    const applications = await Application.find({ studentId: req.params.userId });
+    const applications = await Application.find({ studentId: req.params.userId })
+      .populate({
+        path: 'recommendations.recommender',
+        model: 'Recommender'
+      });
     
-    console.log('Found applications:', applications.length);
-    console.log('First application essays:', applications[0]?.essays?.length || 0);
-    console.log('First application recommendations:', applications[0]?.recommendations?.length || 0);
+    console.log('Found applications:', applications);
     
     res.json(applications);
   } catch (error) {
@@ -30,7 +36,11 @@ export const getByUserId = async (req: Request, res: Response) => {
 
 export const getById = async (req: Request, res: Response) => {
   try {
-    const application = await Application.findById(req.params.id);
+    const application = await Application.findById(req.params.id)
+      .populate({
+        path: 'recommendations.recommender',
+        model: 'Recommender'
+      });
     if (!application) {
       return res.status(404).json({ message: 'Application not found' });
     }

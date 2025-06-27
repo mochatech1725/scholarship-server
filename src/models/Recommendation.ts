@@ -1,5 +1,4 @@
 import mongoose, { Document, Schema } from 'mongoose';
-import Recommender, { IRecommender } from './Recommender.js';
 import { 
   TRecommendationStatus, 
   TSubmissionMethod,
@@ -8,7 +7,7 @@ import {
 } from '../types/application.types.js';
 
 export interface IRecommendation extends Document {
-  recommender: IRecommender;
+  recommender: mongoose.Types.ObjectId;
   status: TRecommendationStatus;
   submissionMethod: TSubmissionMethod;
   requestDate: Date;
@@ -18,7 +17,8 @@ export interface IRecommendation extends Document {
 
 const RecommendationSchema: Schema = new Schema({
   recommender: {
-    type: new Schema(Recommender.schema.obj, { _id: false, timestamps: false }),
+    type: Schema.Types.ObjectId,
+    ref: 'Recommender',
     required: true
   },
   status: {
