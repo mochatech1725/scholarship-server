@@ -37,7 +37,16 @@ const RecommenderSchema: Schema = new Schema({
   },
   phoneNumber: {
     type: String,
-    trim: true
+    trim: true,
+    validate: {
+      validator: function(v: string) {
+        if (!v) return true; // Allow empty/undefined
+        
+        const phoneRegex = /^(\+?1[-.\s]?)?\(?([0-9]{3})\)?[-.\s]?([0-9]{3})[-.\s]?([0-9]{4})$/;
+        return phoneRegex.test(v);
+      },
+      message: 'Phone number must be in a valid format (e.g., (123) 456-7890, 123-456-7890, 1234567890)'
+    }
   }
 }, {
   timestamps: true

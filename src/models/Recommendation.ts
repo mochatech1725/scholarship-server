@@ -1,12 +1,15 @@
 import mongoose, { Document, Schema } from 'mongoose';
-
-export type RecommendationStatus = 'Pending' | 'Submitted';
-export type SubmissionMethod = 'DirectEmail' | 'StudentUpload' | 'DirectMail';
+import { 
+  TRecommendationStatus, 
+  TSubmissionMethod,
+  RECOMMENDATION_STATUSES,
+  SUBMISSION_METHODS
+} from '../types/application.types.js';
 
 export interface IRecommendation extends Document {
   recommender: mongoose.Types.ObjectId;
-  status: RecommendationStatus;
-  submissionMethod: SubmissionMethod;
+  status: TRecommendationStatus;
+  submissionMethod: TSubmissionMethod;
   requestDate: Date;
   dueDate: Date;
   submissionDate?: Date;
@@ -20,21 +23,25 @@ const RecommendationSchema: Schema = new Schema({
   },
   status: {
     type: String,
-    enum: ['Pending', 'Submitted'],
+    enum: RECOMMENDATION_STATUSES,
     default: 'Pending'
   },
   submissionMethod: {
     type: String,
-    enum: ['DirectEmail', 'StudentUpload', 'DirectMail']
+    enum: SUBMISSION_METHODS,
+    required: true
   },
   requestDate: {
     type: Date,
+    required: true
   },
   dueDate: {
     type: Date,
+    required: true
   },
   submissionDate: {
-    type: Date
+    type: Date,
+    default: null
   }
 }, {
   timestamps: true

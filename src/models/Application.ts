@@ -1,19 +1,20 @@
 import mongoose, { Document, Schema } from 'mongoose';
 import Essay from './Essay.js';
 import Recommender from './Recommender.js';
+import { 
+  TApplicationStatus, 
+  TTargetType, 
+  APPLICATION_STATUSES,
+  TARGET_TYPES,
+  RECOMMENDATION_STATUSES,
+  SUBMISSION_METHODS
+} from '../types/application.types.js';
 
-export type ApplicationStatus = 'Not Started' | 'In Progress' | 'Submitted' | 'Awarded' | 'Not Awarded';
-export type TargetType = 'Merit' | 'Need' | 'Both';
-export type RecommendationStatus = 'Pending' | 'Submitted';
-export type SubmissionMethod = 'DirectEmail' | 'StudentUpload' | 'DirectMail';
-
-// Clone the Essay schema for embedding (remove timestamps and _id)
 const EmbeddedEssaySchema = new Schema(Essay.schema.obj, { 
   _id: false,
   timestamps: false 
 });
 
-// Clone the Recommender schema for embedding
 const EmbeddedRecommenderSchema = new Schema(Recommender.schema.obj, { 
   _id: false,
   timestamps: false 
@@ -27,12 +28,12 @@ const EmbeddedRecommendationSchema = new Schema({
   },
   status: {
     type: String,
-    enum: ['Pending', 'Submitted'],
+    enum: RECOMMENDATION_STATUSES,
     default: 'Pending'
   },
   submissionMethod: {
     type: String,
-    enum: ['DirectEmail', 'StudentUpload', 'DirectMail'],
+    enum: SUBMISSION_METHODS,
     required: true
   },
   requestDate: {
@@ -55,7 +56,7 @@ const EmbeddedRecommendationSchema = new Schema({
 export interface IApplication extends Document {
   studentId: string;
   scholarshipName: string;
-  targetType: TargetType;
+  targetType: TTargetType;
   company: string;
   companyWebsite: string;
   platform: string;
@@ -67,7 +68,7 @@ export interface IApplication extends Document {
   renewableTerms?: string;
   documentInfoLink: string;
   currentAction: string;
-  status: ApplicationStatus;
+  status: TApplicationStatus;
   essays: any[]; // Array of embedded Essay objects
   recommendations: any[]; // Array of embedded Recommendation objects
   submissionDate: Date;
@@ -87,7 +88,7 @@ const ApplicationSchema: Schema = new Schema({
   },
   targetType: {
     type: String,
-    enum: ['Merit', 'Need', 'Both']
+    enum: TARGET_TYPES
   },
   company: {
     type: String,
@@ -135,7 +136,7 @@ const ApplicationSchema: Schema = new Schema({
   },
   status: {
     type: String,
-    enum: ['Not Started', 'In Progress', 'Submitted', 'Awarded', 'Not Awarded'],
+    enum: APPLICATION_STATUSES,
     default: 'Not Started'
   },
   essays: [EmbeddedEssaySchema],

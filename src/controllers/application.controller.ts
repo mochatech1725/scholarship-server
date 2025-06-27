@@ -13,9 +13,17 @@ export const getAll = async (req: Request, res: Response) => {
 
 export const getByUserId = async (req: Request, res: Response) => {
   try {
+    console.log('Fetching applications for userId:', req.params.userId);
+    
     const applications = await Application.find({ studentId: req.params.userId });
+    
+    console.log('Found applications:', applications.length);
+    console.log('First application essays:', applications[0]?.essays?.length || 0);
+    console.log('First application recommendations:', applications[0]?.recommendations?.length || 0);
+    
     res.json(applications);
   } catch (error) {
+    console.error('Error in getByUserId:', error);
     res.status(500).json({ message: 'Error fetching applications', error });
   }
 };
