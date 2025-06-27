@@ -1,57 +1,13 @@
 import mongoose, { Document, Schema } from 'mongoose';
-import Essay from './Essay.js';
-import Recommender from './Recommender.js';
+import Essay, { IEssay } from './Essay.js';
+import Recommender, { IRecommender } from './Recommender.js';
+import Recommendation, { IRecommendation } from './Recommendation.js';
 import { 
   TApplicationStatus, 
   TTargetType, 
   APPLICATION_STATUSES,
-  TARGET_TYPES,
-  RECOMMENDATION_STATUSES,
-  SUBMISSION_METHODS
+  TARGET_TYPES
 } from '../types/application.types.js';
-
-const EmbeddedEssaySchema = new Schema(Essay.schema.obj, { 
-  _id: false,
-  timestamps: false 
-});
-
-const EmbeddedRecommenderSchema = new Schema(Recommender.schema.obj, { 
-  _id: false,
-  timestamps: false 
-});
-
-// Create embedded Recommendation schema with embedded Recommender
-const EmbeddedRecommendationSchema = new Schema({
-  recommender: {
-    type: EmbeddedRecommenderSchema,
-    required: true
-  },
-  status: {
-    type: String,
-    enum: RECOMMENDATION_STATUSES,
-    default: 'Pending'
-  },
-  submissionMethod: {
-    type: String,
-    enum: SUBMISSION_METHODS,
-    required: true
-  },
-  requestDate: {
-    type: Date,
-    required: true
-  },
-  dueDate: {
-    type: Date,
-    required: true
-  },
-  submissionDate: {
-    type: Date,
-    default: null
-  }
-}, { 
-  _id: false,
-  timestamps: false 
-});
 
 export interface IApplication extends Document {
   studentId: string;
@@ -69,8 +25,8 @@ export interface IApplication extends Document {
   documentInfoLink: string;
   currentAction: string;
   status: TApplicationStatus;
-  essays: any[]; // Array of embedded Essay objects
-  recommendations: any[]; // Array of embedded Recommendation objects
+  essays: IEssay[]; // Array of embedded Essay objects
+  recommendations: IRecommendation[]; // Array of embedded Recommendation objects
   submissionDate: Date;
   openDate: Date;
   dueDate: Date;
@@ -139,8 +95,8 @@ const ApplicationSchema: Schema = new Schema({
     enum: APPLICATION_STATUSES,
     default: 'Not Started'
   },
-  essays: [EmbeddedEssaySchema],
-  recommendations: [EmbeddedRecommendationSchema],
+  essays: [Essay.schema],
+  recommendations: [Recommendation.schema],
   submissionDate: {
     type: Date
   },
