@@ -10,7 +10,6 @@ import recommenderRoutes from './routes/recommender.routes.js';
 import authRoutes from './routes/auth.routes.js';
 import scholarshipSearchRoutes from './routes/scholarship.search.routes.js';
 import authenticateUser from './middleware/auth.middleware.js';
-import { apiLimiter, authLimiter, searchLimiter } from './middleware/rate-limit.middleware.js';
 import { connectDB } from './config/databaseConfig.js';
 import auth0Config from './config/auth0.config.js';
 
@@ -54,11 +53,6 @@ app.use(cors(corsOptions));
 app.use(helmet());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-
-// Apply rate limiting
-app.use('/api/', apiLimiter); // General API rate limiting
-app.use('/api/auth', authLimiter); // Stricter auth rate limiting
-app.use('/api/scholarships', searchLimiter); // Search rate limiting
 
 // Global error handler to ensure JSON responses
 app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
