@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import dotenv from 'dotenv';
-// eventually maybe move this into RAG
+// TODO: eventually maybe move this into RAG
 import { 
   ScholarshipSearchRequest
 } from '../types/scholarship.types.js';
@@ -8,10 +8,8 @@ import AIScholarshipSearch from '../ai/ai.service.js';
 
 dotenv.config();
 
-// Initialize AI service
 const aiService = new AIScholarshipSearch();
 
-// Main search function
 export const findScholarships = async (req: Request, res: Response) => {
   try {
     const { 
@@ -67,7 +65,6 @@ export const findScholarships = async (req: Request, res: Response) => {
   }
 };
 
-// Get available scholarship sources
 export const getScholarshipSources = async (req: Request, res: Response) => {
   try {
     const result = aiService.getScholarshipSources();
