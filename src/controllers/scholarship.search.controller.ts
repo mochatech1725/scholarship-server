@@ -16,11 +16,11 @@ export const findScholarships = async (req: Request, res: Response) => {
   try {
     const { 
       keywords, 
-      maxResults = 10, 
+      maxResults = parseInt(process.env.MAX_RESULTS || '10'), 
       includeDeadlines = true, 
       minAmount, 
       maxAmount,
-      useRealScraping = false 
+      useRealScraping = true 
     }: ScholarshipSearchRequest = req.body;
 
     // Validate input
@@ -38,8 +38,7 @@ export const findScholarships = async (req: Request, res: Response) => {
       });
     }
 
-    // Use AI service to search scholarships
-    const result = await aiService.searchScholarships({
+    const result = await aiService.findScholarships({
       keywords,
       maxResults,
       includeDeadlines,

@@ -2,25 +2,24 @@ import mongoose, { Schema } from 'mongoose';
 import type { Document } from 'mongoose';
 
 export interface IScholarship extends Document {
-  scholarshipId: string;
   name: string;
   organization: string;
   description: string;
   amount: number;
-  deadline: Date;
+  requirements: string;
   targetType: string;
   theme: string;
-  requirements: string;
+  gender: string;
+  ethnicity: string;
+  academicLevel: string;
+  academicYear: string;
+  academicGPA: number;
   url: string;
   isActive: boolean;
+  deadline: Date;
 }
 
 const ScholarshipSchema: Schema = new Schema({
-  scholarshipId: {
-    type: String,
-    required: true,
-    unique: true
-  },
   name: {
     type: String,
     required: true,
@@ -37,9 +36,6 @@ const ScholarshipSchema: Schema = new Schema({
   amount: {
     type: Number,
   },
-  deadline: {
-    type: Date,
-  },
   targetType: {
     type: String,
     trim: true
@@ -47,6 +43,25 @@ const ScholarshipSchema: Schema = new Schema({
   theme: {
     type: String,
     trim: true
+  },
+  gender: {
+    type: String,
+    trim: true
+  },
+  ethnicity: {
+    type: String,
+    trim: true
+  },
+  academicLevel: {
+    type: String,
+    trim: true
+  },
+  academicYear: {
+    type: String,
+    trim: true
+  },
+  academicGPA: {
+    type: Number,
   },
   requirements: {
     type: String,
@@ -58,6 +73,9 @@ const ScholarshipSchema: Schema = new Schema({
   isActive: {
     type: Boolean,
     default: true
+  },
+  deadline: {
+    type: Date,
   }
 }, {
   timestamps: true
