@@ -4,7 +4,7 @@ import dotenv from 'dotenv';
 import { 
   ScholarshipSearchRequest
 } from '../types/scholarship.types.js';
-import AIScholarshipSearch from '../ai/ai.lib.js';
+import AIScholarshipSearch from '../ai/ai.service.js';
 
 dotenv.config();
 
