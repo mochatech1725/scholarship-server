@@ -1,13 +1,32 @@
 import mongoose, { Schema } from 'mongoose';
 import type { Document } from 'mongoose';
+import { 
+  EducationLevel, 
+  EducationYear, 
+  TargetType, 
+  SubjectArea, 
+  Gender, 
+  Ethnicity,
+  subjectAreasOptions,
+  educationLevelsOptions,
+  educationYearsOptions,
+  targetTypeOptions,
+  genderOptions,
+  ethnicityOptions,
+} from '../types/searchPreferences.types.js';
 
 export interface IProfile {
   userPreferences: {
     searchPreferences: {
-      educationLevel: string;
-      targetTypes: string[];
-      areas: string[];
-      minAmount: number;
+      educationLevel: EducationLevel;
+      educationYear: EducationYear;
+      targetType: TargetType;
+      subjectAreas: SubjectArea[];
+      gender: Gender;
+      ethnicity: Ethnicity;
+      academicGPA: number;
+      essayRequired: boolean;
+      recommendationRequired: boolean;
     };
   };
 }
@@ -17,7 +36,6 @@ export interface IUser extends Document {
   firstName: string;
   lastName: string;
   emailAddress: string;
-  phoneNumber?: string;
   password?: string;
   profile?: IProfile;
 }
@@ -27,19 +45,41 @@ const ProfileSchema: Schema = new Schema({
     searchPreferences: {
       educationLevel: {
         type: String,
-        enum: ['High School Senior', 'College Freshman', 'College Sophomore', 'College Junior', 'College Senior', 'Graduate Student']
+        enum: educationLevelsOptions,
       },
-      targetTypes: [{
+      educationYear: {
         type: String,
-        enum: ['Merit', 'Need', 'Both']
-      }],
-      areas: [{
+        enum: educationYearsOptions,
+      },
+      targetType: {
         type: String,
-        enum: ['STEM', 'Humanities', 'Social Sciences', 'Business', 'Arts', 'Education', 'Healthcare', 'Law', 'Public Policy', 'Environmental Science', 'Computer Science', 'Engineering', 'Mathematics', 'Physics', 'Chemistry', 'Biology', 'Medicine', 'Psychology', 'Economics', 'Other']
+        enum: targetTypeOptions,
+      },
+      subjectAreas: [{
+        type: String,
+        enum: subjectAreasOptions,
       }],
-      minAmount: {
+      gender: {
+        type: String,
+        enum: genderOptions,
+      },
+      ethnicity: {
+        type: String,
+        enum: ethnicityOptions,
+      },
+      academicGPA: {
         type: Number,
+        min: 0,
+        max: 4.0,
         default: 0
+      },
+      essayRequired: {
+        type: Boolean,
+        default: false
+      },
+      recommendationRequired: {
+        type: Boolean,
+        default: false
       }
     }
   }
@@ -72,9 +112,6 @@ const UserSchema: Schema = new Schema({
   phoneNumber: {
     type: String,
     trim: true
-  },
-  password: {
-    type: String
   },
   profile: ProfileSchema
 }, {

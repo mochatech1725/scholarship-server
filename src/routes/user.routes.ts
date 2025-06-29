@@ -8,7 +8,7 @@ import {
 const router = express.Router();
 
 router.get('/', getUsers);
-router.get('/:userId', getUserById);
-router.post('/:userId/profile', saveUserProfile);
+router.get('/getById/:userId', getUserById);
+router.post('/saveProfile/:userId', saveUserProfile);
 
 export default router;

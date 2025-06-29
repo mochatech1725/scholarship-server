@@ -72,19 +72,20 @@ class AIScholarshipSearch {
             // Extract scholarship information
             $('.scholarship, .scholarship-item, [class*="scholarship"]').each((index, element) => {
               const title = $(element).find('h1, h2, h3, .title, [class*="title"]').first().text().trim();
+              const organization = $(element).find('.organization, .org, [class*="organization"]').first().text().trim();
               const description = $(element).find('.description, .desc, [class*="description"]').first().text().trim();
               const amount = $(element).find('.amount, [class*="amount"]').first().text().trim();
               const deadline = $(element).find('.deadline, [class*="deadline"]').first().text().trim();
-              const organization = $(element).find('.organization, .org, [class*="organization"]').first().text().trim();
               const requirements = $(element).find('.requirements, .eligibility, [class*="requirements"]').first().text().trim();
-              const url = $(element).find('a[href]').first().attr('href') || '';
               const targetType = $(element).find('.target-type, [class*="target"]').first().text().trim();
-              const theme = $(element).find('.theme, .category, [class*="theme"]').first().text().trim();
               const gender = $(element).find('.gender, [class*="gender"]').first().text().trim();
               const ethnicity = $(element).find('.ethnicity, [class*="ethnicity"]').first().text().trim();
               const academicLevel = $(element).find('.academic-level, [class*="level"]').first().text().trim();
               const academicYear = $(element).find('.academic-year, [class*="year"]').first().text().trim();
               const academicGPA = $(element).find('.gpa, [class*="gpa"]').first().text().trim();
+              const essayRequired = $(element).find('.essay, .essay-required, [class*="essay"]').first().text().trim();
+              const recommendationRequired = $(element).find('.recommendation, .recommendation-required, [class*="recommendation"]').first().text().trim();
+              const url = $(element).find('a[href]').first().attr('href') || '';
               
               if (title && description) {
                 scrapedData.push(`
@@ -95,12 +96,13 @@ class AIScholarshipSearch {
                   Deadline: ${deadline || 'Not specified'}
                   Requirements: ${requirements || 'Not specified'}
                   Target Type: ${targetType || 'Not specified'}
-                  Theme: ${theme || 'Not specified'}
                   Gender: ${gender || 'Not specified'}
                   Ethnicity: ${ethnicity || 'Not specified'}
                   Academic Level: ${academicLevel || 'Not specified'}
                   Academic Year: ${academicYear || 'Not specified'}
                   Academic GPA: ${academicGPA || 'Not specified'}
+                  Essay Required: ${essayRequired || 'Not specified'}
+                  Recommendation Required: ${recommendationRequired || 'Not specified'}
                   URL: ${url || website.url}
                   Source: ${website.name}
                 `);
@@ -137,6 +139,8 @@ class AIScholarshipSearch {
             academicLevel: 'Undergraduate',
             academicYear: 'All',
             academicGPA: 3.5,
+            essayRequired: 'Yes',
+            recommendationRequired: 'Yes',
             url: 'https://scholarships.com/academic-excellence',
             isActive: true,
             source: 'Scholarships.com'
@@ -155,6 +159,8 @@ class AIScholarshipSearch {
             academicLevel: 'Undergraduate',
             academicYear: 'All',
             academicGPA: 3.0,
+            essayRequired: 'No',
+            recommendationRequired: 'Yes',
             url: 'https://fastweb.com/merit-aid',
             isActive: true,
             source: 'Fastweb'
@@ -173,6 +179,8 @@ class AIScholarshipSearch {
             academicLevel: 'Undergraduate',
             academicYear: 'All',
             academicGPA: 3.2,
+            essayRequired: 'Yes',
+            recommendationRequired: 'Yes',
             url: 'https://collegeboard.org/leadership-award',
             isActive: true,
             source: 'College Board'
@@ -191,6 +199,8 @@ class AIScholarshipSearch {
             academicLevel: 'Undergraduate',
             academicYear: 'All',
             academicGPA: 3.3,
+            essayRequired: 'Yes',
+            recommendationRequired: 'No',
             url: 'https://cappex.com/stem-innovation',
             isActive: true,
             source: 'Cappex'
@@ -209,6 +219,8 @@ class AIScholarshipSearch {
             academicLevel: 'Undergraduate',
             academicYear: 'All',
             academicGPA: 3.0,
+            essayRequired: 'Yes',
+            recommendationRequired: 'Yes',
             url: 'https://niche.com/diversity-grant',
             isActive: true,
             source: 'Niche'
@@ -227,6 +239,8 @@ class AIScholarshipSearch {
             academicLevel: 'Undergraduate',
             academicYear: 'All',
             academicGPA: 3.0,
+            essayRequired: 'No',
+            recommendationRequired: 'No',
             url: 'https://scholarships.com/community-service',
             isActive: true,
             source: 'Scholarships.com'
@@ -249,6 +263,8 @@ class AIScholarshipSearch {
             Academic Level: ${scholarship.academicLevel}
             Academic Year: ${scholarship.academicYear}
             Academic GPA: ${scholarship.academicGPA}
+            Essay Required: ${scholarship.essayRequired}
+            Recommendation Required: ${scholarship.recommendationRequired}
             URL: ${scholarship.url}
             Is Active: ${scholarship.isActive}
             Source: ${scholarship.source}
@@ -320,8 +336,6 @@ class AIScholarshipSearch {
       keywords, 
       maxResults = parseInt(process.env.MAX_RESULTS || '10'), 
       includeDeadlines = true, 
-      minAmount, 
-      maxAmount,
       useRealScraping = false 
     } = searchParams;
 
@@ -348,23 +362,6 @@ class AIScholarshipSearch {
 
       // Step 3: Apply additional filters
       let filteredScholarships = analyzedScholarships;
-
-      if (minAmount || maxAmount) {
-        filteredScholarships = filteredScholarships.filter((scholarship: ScholarshipResult) => {
-          if (!scholarship.amount) return true;
-          
-          // Extract numeric amount from string
-          const amountMatch = scholarship.amount.match(/\$?([0-9,]+)/);
-          if (!amountMatch) return true;
-          
-          const amount = parseInt(amountMatch[1].replace(/,/g, ''));
-          
-          if (minAmount && amount < minAmount) return false;
-          if (maxAmount && amount > maxAmount) return false;
-          
-          return true;
-        });
-      }
 
       if (!includeDeadlines) {
         filteredScholarships = filteredScholarships.map((scholarship: ScholarshipResult) => {

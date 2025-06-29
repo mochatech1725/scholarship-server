@@ -34,8 +34,6 @@ Search for scholarships using AI-powered analysis.
   "keywords": ["computer science", "undergraduate", "women"],
   "maxResults": 10,
   "includeDeadlines": true,
-  "minAmount": 1000,
-  "maxAmount": 10000,
   "useRealScraping": false
 }
 ```

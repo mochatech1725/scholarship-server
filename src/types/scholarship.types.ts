@@ -11,8 +11,6 @@ export interface ScholarshipSearchRequest {
   keywords: string[];
   maxResults?: number;
   includeDeadlines?: boolean;
-  minAmount?: number;
-  maxAmount?: number;
   useRealScraping?: boolean;
 }
 
@@ -23,6 +21,13 @@ export interface ScholarshipResult {
   amount?: string;
   deadline?: string;
   eligibility?: string;
+  gender?: string;
+  ethnicity?: string;
+  academicLevel?: string;
+  academicYear?: string;
+  academicGPA?: number;
+  essayRequired?: boolean;
+  recommendationRequired?: boolean;
   source: string;
   url?: string;
   relevanceScore: number;

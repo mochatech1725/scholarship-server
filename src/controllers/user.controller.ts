@@ -3,7 +3,7 @@ import User from '../models/User.js';
 
 export const getUsers = async (req: Request, res: Response) => {
   try {
-    const users = await User.find().select('-password'); // Exclude password from response
+    const users = await User.find()
     res.json(users);
   } catch (error) {
     res.status(500).json({ message: 'Error fetching users', error });
@@ -12,7 +12,7 @@ export const getUsers = async (req: Request, res: Response) => {
 
 export const getUserById = async (req: Request, res: Response) => {
   try {
-    const user = await User.findById(req.params.id).select('-password');
+    const user = await User.findOne({userId: req.params.userId})
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
@@ -24,11 +24,14 @@ export const getUserById = async (req: Request, res: Response) => {
 
 export const saveUserProfile = async (req: Request, res: Response) => {
   try {
-    const user = await User.findByIdAndUpdate(
-      req.params.id,
-      { profile: req.body.profile },
+    // Filter out _id field from profile data to prevent immutable field error
+    const { _id, ...profileData } = req.body;
+    
+    const user = await User.findOneAndUpdate(
+      {userId: req.params.userId},
+      { profile: profileData },
       { new: true, runValidators: true }
-    ).select('-password');
+    );
     
     if (!user) {
       return res.status(404).json({ message: 'User not found' });

@@ -16,8 +16,6 @@ export const findScholarships = async (req: Request, res: Response) => {
       keywords, 
       maxResults = parseInt(process.env.MAX_RESULTS || '10'), 
       includeDeadlines = true, 
-      minAmount, 
-      maxAmount,
       useRealScraping = true 
     }: ScholarshipSearchRequest = req.body;
 
@@ -40,8 +38,6 @@ export const findScholarships = async (req: Request, res: Response) => {
       keywords,
       maxResults,
       includeDeadlines,
-      minAmount,
-      maxAmount,
       useRealScraping
     });
 
