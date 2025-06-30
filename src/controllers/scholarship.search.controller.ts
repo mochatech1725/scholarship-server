@@ -3,7 +3,7 @@ import dotenv from 'dotenv';
 // TODO: eventually maybe move this into RAG
 import { 
   ScholarshipSearchRequest
-} from '../types/scholarship.types.js';
+} from '../types/searchPreferences.types.js';
 import AIScholarshipSearch from '../ai/ai.service.js';
 
 dotenv.config();

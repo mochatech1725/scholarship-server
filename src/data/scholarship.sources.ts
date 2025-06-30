@@ -1,4 +1,4 @@
-import { ScholarshipWebsite } from '../types/scholarship.types.js';
+import { ScholarshipWebsite } from '../types/searchPreferences.types.js';
 
 export const scholarshipWebsitesData: ScholarshipWebsite[] = [
   {

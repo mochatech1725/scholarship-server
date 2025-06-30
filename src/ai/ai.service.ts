@@ -8,7 +8,7 @@ import {
   SearchResponse,
   SourcesResponse,
   SearchFilters
-} from '../types/scholarship.types.js';
+} from '../types/searchPreferences.types.js';
 import { aiPrompts } from '../data/ai.prompts.js';
 import { scholarshipWebsitesData as scholarshipSources } from '../data/scholarship.sources.js';
 
