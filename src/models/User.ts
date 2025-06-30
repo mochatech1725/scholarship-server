@@ -18,17 +18,17 @@ import {
 export interface IProfile {
   userPreferences: {
     searchPreferences: {
+      subjectAreas: SubjectArea[];
       educationLevel: EducationLevel;
       educationYear: EducationYear;
       targetType: TargetType;
-      subjectAreas: SubjectArea[];
       gender: Gender;
       ethnicity: Ethnicity;
       academicGPA: number;
       essayRequired: boolean;
       recommendationRequired: boolean;
     };
-  };
+  }
 }
 
 export interface IUser extends Document {
@@ -43,6 +43,10 @@ export interface IUser extends Document {
 const ProfileSchema: Schema = new Schema({
   userPreferences: {
     searchPreferences: {
+      subjectAreas: [{
+        type: String,
+        enum: subjectAreasOptions,
+      }],
       educationLevel: {
         type: String,
         enum: educationLevelsOptions,
@@ -55,10 +59,6 @@ const ProfileSchema: Schema = new Schema({
         type: String,
         enum: targetTypeOptions,
       },
-      subjectAreas: [{
-        type: String,
-        enum: subjectAreasOptions,
-      }],
       gender: {
         type: String,
         enum: genderOptions,
