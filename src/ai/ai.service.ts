@@ -1,6 +1,7 @@
 import OpenAI from 'openai';
-import * as cheerio from 'cheerio';
 import axios from 'axios';
+import dotenv from 'dotenv';
+
 import {
   ScholarshipWebsite,
   ScholarshipSearchRequest as ScholarshipSearchParams,
@@ -11,7 +12,8 @@ import {
 } from '../types/searchPreferences.types.js';
 import { aiPrompts } from '../data/ai.prompts.js';
 import { scholarshipWebsitesData as scholarshipSources } from '../data/scholarship.sources.js';
-
+// Load environment variables
+dotenv.config();
 
 // TODO: Add pagination
 /**

@@ -2,25 +2,42 @@ import { auth, requiredScopes } from "express-oauth2-jwt-bearer";
 import type { Request, Response, NextFunction } from 'express';
 import auth0Config from "../config/auth0.config.js";
 
-// console.log('Auth0 Config:', {
-//   audience: auth0Config.audience,
-//   issuerBaseURL: auth0Config.issuerBaseUrl,
-//   hasAudience: !!auth0Config.audience,
-//   hasIssuer: !!auth0Config.issuerBaseUrl
-// });
+// Check if Auth0 is properly configured
+const isAuth0Configured = auth0Config.audience && auth0Config.issuerBaseUrl && 
+                          auth0Config.audience !== "" && auth0Config.issuerBaseUrl !== "";
 
-const authenticateUser = auth({
+console.log('Auth0 is configured:', isAuth0Configured);
+
+// Create auth middleware only if Auth0 is configured
+const authenticateUser = isAuth0Configured ? auth({
   audience: auth0Config.audience,
   issuerBaseURL: auth0Config.issuerBaseUrl,
   tokenSigningAlg: 'RS256'
-});
+}) : null;
 
 // Enhanced authentication middleware with error handling
 const authenticateUserWithErrorHandling = (req: Request, res: Response, next: NextFunction) => {
   // Log authentication attempts for security monitoring
   console.log(`Auth attempt: ${req.method} ${req.path} - IP: ${req.ip}`);
   
-  authenticateUser(req, res, (err) => {
+  // If Auth0 is not configured, skip authentication for development
+  if (!isAuth0Configured) {
+    console.log('Auth0 not configured - skipping authentication for development');
+    // Add a mock user for development
+    (req as any).auth = {
+      payload: {
+        sub: 'dev-user',
+        iss: 'dev-issuer',
+        aud: 'dev-audience'
+      },
+      header: {},
+      token: 'mock-token'
+    };
+    return next();
+  }
+  
+  // Use Auth0 authentication if configured
+  authenticateUser!(req, res, (err) => {
     if (err) {
       console.error('Authentication error:', {
         error: err.message,

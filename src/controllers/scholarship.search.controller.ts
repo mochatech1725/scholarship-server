@@ -1,9 +1,6 @@
 import { Request, Response } from 'express';
 import dotenv from 'dotenv';
-// TODO: eventually maybe move this into RAG
-import { 
-  ScholarshipSearchRequest
-} from '../types/searchPreferences.types.js';
+
 import AIScholarshipSearch from '../ai/ai.service.js';
 
 dotenv.config();
