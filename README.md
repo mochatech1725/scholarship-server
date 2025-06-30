@@ -213,3 +213,71 @@ src/
 ## License
 
 This project is licensed under the MIT License. 
+
+## AI-Driven Scraping Approach
+
+The system uses a sophisticated AI approach to handle the variability in website structures:
+
+### AI Approach
+
+**AI-Driven Scraping (Current):**
+- Uses OpenAI to intelligently parse any HTML structure
+- Recognizes semantic meaning regardless of field names
+- Automatically adapts to different website layouts
+- Handles variations like:
+  - Deadline: `due date`, `application deadline`, `closing date`
+  - Amount: `award amount`, `scholarship value`, `prize money`
+  - Organization: `company`, `sponsor`, `provider`, `institution`
+  - Ethnicity: `race`, `background`, `heritage`
+
+### How It Works
+
+1. **HTML Fetching**: Downloads the raw HTML from scholarship websites
+2. **Content Cleaning**: Removes scripts, styles, and unnecessary elements
+3. **AI Analysis**: Sends cleaned HTML to OpenAI with specialized prompts
+4. **Intelligent Extraction**: AI identifies scholarship opportunities and extracts relevant fields
+5. **Structured Output**: Returns standardized JSON with all scholarship details
+
+## Environment Variables
+
+```bash
+OPENAI_API_KEY=your_openai_api_key
+OPENAI_MODEL=gpt-3.5-turbo  # or gpt-4 for better accuracy
+MAX_RESULTS=10
+```
+
+## API Endpoints
+
+- `POST /api/search` - Search for scholarships with filters
+- `GET /api/sources` - Get available scholarship sources
+
+## Example Usage
+
+```javascript
+// Search for scholarships
+const response = await fetch('/api/search', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    filters: {
+      searchQuery: "computer science",
+      educationLevel: "undergraduate",
+      subjectAreas: ["Computer Science", "Technology"],
+      academicGPA: 3.5
+    },
+    maxResults: 10
+  })
+});
+```
+
+## Supported Websites
+
+- Fastweb
+- College Board
+- Cappex
+- Niche
+- Scholarship360
+- Unigo
+- Peterson's
+
+The AI approach allows the system to work with any scholarship website without manual configuration. 

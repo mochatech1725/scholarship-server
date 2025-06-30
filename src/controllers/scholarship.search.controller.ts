@@ -12,17 +12,13 @@ const aiService = new AIScholarshipSearch();
 
 export const findScholarships = async (req: Request, res: Response) => {
   try {
-    const { 
-      keywords, 
-      maxResults = parseInt(process.env.MAX_RESULTS || '10'), 
-      includeDeadlines = true, 
-      useRealScraping = true 
-    }: ScholarshipSearchRequest = req.body;
+    const maxResults = parseInt(process.env.MAX_RESULTS || '10')
+    const filters = req.body.filters || req.body;
 
     // Validate input
-    if (!keywords || !Array.isArray(keywords) || keywords.length === 0) {
+    if (!filters || typeof filters !== 'object') {
       return res.status(400).json({
-        message: 'Keywords array is required and must not be empty',
+        message: 'Filters object is required',
         error: 'INVALID_INPUT'
       });
     }
@@ -35,10 +31,8 @@ export const findScholarships = async (req: Request, res: Response) => {
     }
 
     const result = await aiService.findScholarships({
-      keywords,
-      maxResults,
-      includeDeadlines,
-      useRealScraping
+      filters,
+      maxResults
     });
 
     res.json(result);

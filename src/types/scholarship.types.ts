@@ -3,16 +3,29 @@ export interface ScholarshipWebsite {
   name: string;
   url: string;
   searchUrl: string;
-  description: string;
 }
 
-// Interface for scholarship search request
+
+export interface SearchFilters {
+  subjectAreas: string[]
+  searchQuery: string
+  educationLevel: string | null
+  educationYear: string | null
+  targetType: string | null
+  gender: string | null
+  ethnicity: string | null
+  academicGPA: number | null
+  essayRequired: boolean | null
+  recommendationRequired: boolean | null
+}
+
 export interface ScholarshipSearchRequest {
-  keywords: string[];
+  filters?: SearchFilters;
   maxResults?: number;
   includeDeadlines?: boolean;
   useRealScraping?: boolean;
 }
+
 
 // Interface for scholarship result
 export interface ScholarshipResult {
@@ -38,14 +51,12 @@ export interface SearchResponse {
   data: {
     scholarships: ScholarshipResult[];
     totalFound: number;
-    keywords: string[];
     searchTimestamp: string;
   };
   metadata: {
     sourcesUsed: string[];
     aiModel: string;
     processingTime: string;
-    realScrapingUsed: boolean;
   };
 }
 
@@ -64,7 +75,6 @@ export interface SourcesResponse {
     sources: Array<{
       name: string;
       url: string;
-      description: string;
     }>;
     totalSources: number;
   };
