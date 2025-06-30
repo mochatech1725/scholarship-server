@@ -10,7 +10,7 @@ import {
   SearchFilters
 } from '../types/scholarship.types.js';
 import { aiPrompts } from '../data/ai.prompts.js';
-import { scholarshipWebsitesData } from '../data/scholarship.websites.js';
+import { scholarshipWebsitesData as scholarshipSources } from '../data/scholarship.sources.js';
 
 
 // TODO: Add pagination
@@ -31,7 +31,7 @@ class AIScholarshipSearch {
     this.prompts = aiPrompts;
     
     // Scholarship websites for RAG (imported from JSON)
-    this.scholarshipWebsites = scholarshipWebsitesData;
+    this.scholarshipWebsites = scholarshipSources;
   }
 
   /**
