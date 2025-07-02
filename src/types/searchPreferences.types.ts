@@ -9,11 +9,11 @@ export interface ScholarshipWebsite {
 export interface SearchCriteria {
   subjectAreas: string[]
   keywords: string
-  educationLevel: string | null
+  academicLevel: string | null
   targetType: string | null
   gender: string | null
   ethnicity: string | null
-  state: string | null
+  geographicRestrictions: string | null
   academicGPA: number | null
   essayRequired: boolean | null
   recommendationRequired: boolean | null
@@ -44,6 +44,8 @@ export interface ScholarshipResult {
   academicGPA?: number;
   essayRequired?: boolean;
   recommendationRequired?: boolean;
+  renewable?: boolean;
+  geographicRestrictions?: string;
   source: string;
   url?: string;
   relevanceScore: number;

@@ -74,8 +74,8 @@ export class AWSScraperService {
     if (criteria.keywords) {
       params.append('q', criteria.keywords);
     }
-    if (criteria.educationLevel) {
-      params.append('level', criteria.educationLevel.toLowerCase());
+    if (criteria.academicLevel) {
+      params.append('level', criteria.academicLevel.toLowerCase());
     }
     if (criteria.subjectAreas && criteria.subjectAreas.length > 0) {
       params.append('major', criteria.subjectAreas.join(','));
@@ -86,8 +86,8 @@ export class AWSScraperService {
     if (criteria.ethnicity) {
       params.append('ethnicity', criteria.ethnicity.toLowerCase());
     }
-    if (criteria.state) {
-      params.append('state', criteria.state);
+    if (criteria.geographicRestrictions) {
+      params.append('geographicRestrictions', criteria.geographicRestrictions);
     }
     
     const queryString = params.toString();
@@ -132,21 +132,21 @@ export class AWSScraperService {
           if (criteria.keywords) {
             params.append('keyword', criteria.keywords);
           }
-          if (criteria.educationLevel) {
+          if (criteria.academicLevel) {
             // Map education levels to CareerOneStop's format
             const levelMap: Record<string, string> = {
               'High School': 'high-school',
               'Undergraduate': 'undergraduate',
               'Graduate': 'graduate'
             };
-            const mappedLevel = levelMap[criteria.educationLevel] || criteria.educationLevel.toLowerCase();
+            const mappedLevel = levelMap[criteria.academicLevel] || criteria.academicLevel.toLowerCase();
             params.append('education-level', mappedLevel);
           }
           if (criteria.subjectAreas && criteria.subjectAreas.length > 0) {
             params.append('field-of-study', criteria.subjectAreas.join(','));
           }
-          if (criteria.state) {
-            params.append('state', criteria.state);
+          if (criteria.geographicRestrictions) {
+            params.append('geographicRestrictions', criteria.geographicRestrictions);
           }
           
           const queryString = params.toString();
@@ -267,14 +267,14 @@ export class AWSScraperService {
           if (criteria.keywords) {
             params.append('keyword', criteria.keywords);
           }
-          if (criteria.educationLevel) {
+          if (criteria.academicLevel) {
             // Map education levels to CollegeScholarships.org format
             const levelMap: Record<string, string> = {
               'High School': 'high-school',
               'Undergraduate': 'undergraduate',
               'Graduate': 'graduate'
             };
-            const mappedLevel = levelMap[criteria.educationLevel] || criteria.educationLevel.toLowerCase();
+            const mappedLevel = levelMap[criteria.academicLevel] || criteria.academicLevel.toLowerCase();
             params.append('school-level', mappedLevel);
           }
           if (criteria.subjectAreas && criteria.subjectAreas.length > 0) {
@@ -286,8 +286,8 @@ export class AWSScraperService {
           if (criteria.ethnicity) {
             params.append('ethnicity', criteria.ethnicity.toLowerCase());
           }
-          if (criteria.state) {
-            params.append('state', criteria.state);
+          if (criteria.geographicRestrictions) {
+            params.append('geographicRestrictions', criteria.geographicRestrictions);
           }
           
           const queryString = params.toString();
@@ -304,7 +304,6 @@ export class AWSScraperService {
         const $ = cheerio.load(response.data);
         const scholarships: ScholarshipResult[] = [];
         
-// CollegeScholarships.org specific selectors - look for rows containing scholarships
         $('.row').each((i, elem) => {
           const $row = $(elem);
           
@@ -316,13 +315,13 @@ export class AWSScraperService {
             // Extract award amount from summary section
             const amount = $summary.find('.lead strong').text().trim() || 'Amount varies';
             
-            // Extract deadline from summary section
             const deadline = $summary.find('p').last().find('strong').text().trim() || 'No deadline specified';
             
-            // Extract title and link from description section
             const titleElement = $description.find('h4 a');
             const title = titleElement.text().trim();
             const link = titleElement.attr('href');
+            let academicLevel: string | null = null;
+            let geographicRestrictions: string | null = null;
             
             // Extract main description (not the mobile-only paragraph)
             const description = $description.find('p').not('.visible-xs').first().text().trim();
@@ -332,8 +331,19 @@ export class AWSScraperService {
             $description.find('ul.fa-ul li').each((j, li) => {
               const $li = $(li);
               const text = $li.find('.trim').text().trim();
-              if (text && !text.includes('No Geographic Restrictions')) {
-                eligibilityItems.push(text);
+              
+              const $icon = $li.find('i');
+              const iconClasses = $icon.attr('class') || '';
+              if (text) {
+                if (iconClasses.includes('fa-map-marker')) {
+                  geographicRestrictions = text;
+                } else if (iconClasses.includes('fa-graduation-cap')) {
+                  academicLevel = text;
+                } else {
+                  if (!text.includes('No Geographic Restrictions')) {
+                    eligibilityItems.push(text);
+                  }
+                }
               }
             });
             const eligibility = eligibilityItems.join(' | ');
@@ -344,8 +354,10 @@ export class AWSScraperService {
                 amount,
                 deadline,
                 url: link || '',
-                description: description || 'No description available',
+                description: description || '',
                 eligibility,
+                academicLevel: academicLevel || undefined,
+                geographicRestrictions: geographicRestrictions || undefined,
                 source: 'CollegeScholarships.org',
                 relevanceScore: 0
               });
