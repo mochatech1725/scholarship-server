@@ -2,14 +2,12 @@ import mongoose, { Schema } from 'mongoose';
 import type { Document } from 'mongoose';
 import { 
   EducationLevel, 
-  EducationYear, 
   TargetType, 
   SubjectArea, 
   Gender, 
   Ethnicity,
   subjectAreasOptions,
   educationLevelsOptions,
-  educationYearsOptions,
   targetTypeOptions,
   genderOptions,
   ethnicityOptions,
@@ -20,7 +18,6 @@ export interface IProfile {
     searchPreferences: {
       subjectAreas: SubjectArea[];
       educationLevel: EducationLevel;
-      educationYear: EducationYear;
       targetType: TargetType;
       gender: Gender;
       ethnicity: Ethnicity;
@@ -50,10 +47,6 @@ const ProfileSchema: Schema = new Schema({
       educationLevel: {
         type: String,
         enum: educationLevelsOptions,
-      },
-      educationYear: {
-        type: String,
-        enum: educationYearsOptions,
       },
       targetType: {
         type: String,

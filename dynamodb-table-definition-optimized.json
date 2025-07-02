@@ -1,0 +1,146 @@
+{
+  "TableName": "Scholarships",
+  "BillingMode": "PAY_PER_REQUEST",
+  "KeySchema": [
+    {
+      "AttributeName": "id",
+      "KeyType": "HASH"
+    }
+  ],
+  "AttributeDefinitions": [
+    {
+      "AttributeName": "id",
+      "AttributeType": "S"
+    },
+    {
+      "AttributeName": "active",
+      "AttributeType": "S"
+    },
+    {
+      "AttributeName": "educationLevel",
+      "AttributeType": "S"
+    },
+    {
+      "AttributeName": "deadline",
+      "AttributeType": "S"
+    },
+    {
+      "AttributeName": "major",
+      "AttributeType": "S"
+    },
+    {
+      "AttributeName": "state",
+      "AttributeType": "S"
+    },
+    {
+      "AttributeName": "ethnicity",
+      "AttributeType": "S"
+    },
+    {
+      "AttributeName": "gender",
+      "AttributeType": "S"
+    },
+    {
+      "AttributeName": "minimumGPA",
+      "AttributeType": "N"
+    }
+  ],
+  "GlobalSecondaryIndexes": [
+    {
+      "IndexName": "ActiveScholarshipsIndex",
+      "KeySchema": [
+        {
+          "AttributeName": "active",
+          "KeyType": "HASH"
+        }
+      ],
+      "Projection": {
+        "ProjectionType": "ALL"
+      }
+    },
+    {
+      "IndexName": "EducationLevelIndex",
+      "KeySchema": [
+        {
+          "AttributeName": "educationLevel",
+          "KeyType": "HASH"
+        }
+      ],
+      "Projection": {
+        "ProjectionType": "ALL"
+      }
+    },
+    {
+      "IndexName": "DeadlineIndex",
+      "KeySchema": [
+        {
+          "AttributeName": "deadline",
+          "KeyType": "HASH"
+        }
+      ],
+      "Projection": {
+        "ProjectionType": "ALL"
+      }
+    },
+    {
+      "IndexName": "MajorIndex",
+      "KeySchema": [
+        {
+          "AttributeName": "major",
+          "KeyType": "HASH"
+        }
+      ],
+      "Projection": {
+        "ProjectionType": "ALL"
+      }
+    },
+    {
+      "IndexName": "LocationIndex",
+      "KeySchema": [
+        {
+          "AttributeName": "state",
+          "KeyType": "HASH"
+        }
+      ],
+      "Projection": {
+        "ProjectionType": "ALL"
+      }
+    },
+    {
+      "IndexName": "DemographicsIndex",
+      "KeySchema": [
+        {
+          "AttributeName": "ethnicity",
+          "KeyType": "HASH"
+        }
+      ],
+      "Projection": {
+        "ProjectionType": "ALL"
+      }
+    },
+    {
+      "IndexName": "GenderIndex",
+      "KeySchema": [
+        {
+          "AttributeName": "gender",
+          "KeyType": "HASH"
+        }
+      ],
+      "Projection": {
+        "ProjectionType": "ALL"
+      }
+    },
+    {
+      "IndexName": "GPAIndex",
+      "KeySchema": [
+        {
+          "AttributeName": "minimumGPA",
+          "KeyType": "HASH"
+        }
+      ],
+      "Projection": {
+        "ProjectionType": "ALL"
+      }
+    }
+  ]
+} 

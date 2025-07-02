@@ -12,7 +12,6 @@ export interface IScholarship extends Document {
   gender: string;
   ethnicity: string;
   academicLevel: string;
-  academicYear: string;
   academicGPA: number;
   url: string;
   isActive: boolean;
@@ -53,10 +52,6 @@ const ScholarshipSchema: Schema = new Schema({
     trim: true
   },
   academicLevel: {
-    type: String,
-    trim: true
-  },
-  academicYear: {
     type: String,
     trim: true
   },

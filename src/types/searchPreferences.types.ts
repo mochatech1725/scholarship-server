@@ -6,21 +6,26 @@ export interface ScholarshipWebsite {
   searchUrl: string;
 }
 
-export interface SearchFilters {
+export interface SearchCriteria {
   subjectAreas: string[]
-  searchQuery: string
+  keywords: string
   educationLevel: string | null
-  educationYear: string | null
   targetType: string | null
   gender: string | null
   ethnicity: string | null
+  state: string | null
   academicGPA: number | null
   essayRequired: boolean | null
   recommendationRequired: boolean | null
+  deadlineRange?: {
+    startDate?: string  // ISO date string
+    endDate?: string    // ISO date string
+  }
+  deadlineWithinDays?: number  // e.g., 30 for "due within 30 days"
 }
 
 export interface ScholarshipSearchRequest {
-  filters?: SearchFilters;
+  filters?: SearchCriteria;
   maxResults?: number;
   includeDeadlines?: boolean;
   useRealScraping?: boolean;
@@ -36,7 +41,6 @@ export interface ScholarshipResult {
   gender?: string;
   ethnicity?: string;
   academicLevel?: string;
-  academicYear?: string;
   academicGPA?: number;
   essayRequired?: boolean;
   recommendationRequired?: boolean;
@@ -84,23 +88,17 @@ export interface SourcesResponse {
 export const educationLevelsOptions = [
   'High School',
   'Undergraduate',
-  'Graduate'
-] as const;
-
-export type EducationLevel = typeof educationLevelsOptions[number];
-
-// Education Year enum (for more specific year targeting)
-export const educationYearsOptions = [
+  'Graduate',
   'High School Junior',
   'High School Senior',
   'College Freshman',
   'College Sophomore',
   'College Junior',
   'College Senior',
-  'Graduate Student'
-] as const;
+  'Graduate Student'] as const;
 
-export type EducationYear = typeof educationYearsOptions[number];
+export type EducationLevel = typeof educationLevelsOptions[number];
+
 
 export const targetTypeOptions = ['Merit', 'Need', 'Both'] as const;
 export type TargetType = typeof targetTypeOptions[number];

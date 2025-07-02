@@ -59,7 +59,7 @@ Search for scholarships using AI-powered analysis.
     "searchTimestamp": "2024-01-15T10:30:00.000Z"
   },
   "metadata": {
-    "sourcesUsed": ["Scholarships.com", "Fastweb", "College Board", "Cappex", "Niche"],
+    "sourcesUsed": ["Scholarships.com", "Fastweb", "College Board", "Appily", "Niche"],
     "aiModel": "gpt-3.5-turbo",
     "processingTime": "2024-01-15T10:30:05.000Z",
     "realScrapingUsed": false
@@ -80,7 +80,7 @@ The AI search system integrates with the following scholarship websites:
 1. **Scholarships.com** - Comprehensive scholarship database
 2. **Fastweb** - Leading scholarship search platform
 3. **College Board** - Official College Board scholarship search
-4. **Cappex** - Scholarship matching platform
+4. **appily** - Scholarship matching platform
 5. **Niche** - College and scholarship search platform
 
 ### How the AI Search Works
@@ -260,7 +260,7 @@ const response = await fetch('/api/search', {
   headers: { 'Content-Type': 'application/json' },
   body: JSON.stringify({
     filters: {
-      searchQuery: "computer science",
+      keywords: "computer science",
       educationLevel: "undergraduate",
       subjectAreas: ["Computer Science", "Technology"],
       academicGPA: 3.5
@@ -274,7 +274,7 @@ const response = await fetch('/api/search', {
 
 - Fastweb
 - College Board
-- Cappex
+- Appily
 - Niche
 - Scholarship360
 - Unigo
