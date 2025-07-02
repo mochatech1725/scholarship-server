@@ -213,7 +213,6 @@ export class AWSScraperService {
           });
         }
         
-        // If still no results, try scraping from table format
         if (scholarships.length === 0) {
           $('table tr').each((i, elem) => {
             const $row = $(elem);
@@ -305,94 +304,54 @@ export class AWSScraperService {
         const $ = cheerio.load(response.data);
         const scholarships: ScholarshipResult[] = [];
         
-        // CollegeScholarships.org specific selectors based on the site structure
-        // The site appears to have scholarship cards with award amounts and deadlines
-        $('.scholarship-item, .result-item, .scholarship-card, .award-item').each((i, elem) => {
-          const $elem = $(elem);
+// CollegeScholarships.org specific selectors - look for rows containing scholarships
+        $('.row').each((i, elem) => {
+          const $row = $(elem);
           
-          // Extract scholarship information
-          const title = $elem.find('h3, h2, h4, .title, .scholarship-title, .award-title').text().trim();
-          const amount = $elem.find('.award, .amount, .award-amount, .value, [class*="award"]').text().trim();
-          const deadline = $elem.find('.deadline, .due-date, .deadline-date, [class*="deadline"]').text().trim();
-          const link = $elem.find('a').attr('href');
-          const description = $elem.find('.description, .summary, .details, .scholarship-description').text().trim();
-          const eligibility = $elem.find('.eligibility, .requirements, .criteria, .qualifications').text().trim();
+          // Check if this row contains scholarship data
+          const $summary = $row.find('.scholarship-summary');
+          const $description = $row.find('.scholarship-description');
           
-          if (title) {
-            scholarships.push({
-              title,
-              amount: amount || 'Amount varies',
-              deadline: deadline || 'No deadline specified',
-              url: link ? (link.startsWith('http') ? link : `http://www.collegescholarships.org${link}`) : '',
-              description: description || 'No description available',
-              eligibility: eligibility || 'Eligibility requirements not specified',
-              source: 'CollegeScholarships.org',
-              relevanceScore: 0
+          if ($summary.length > 0 && $description.length > 0) {
+            // Extract award amount from summary section
+            const amount = $summary.find('.lead strong').text().trim() || 'Amount varies';
+            
+            // Extract deadline from summary section
+            const deadline = $summary.find('p').last().find('strong').text().trim() || 'No deadline specified';
+            
+            // Extract title and link from description section
+            const titleElement = $description.find('h4 a');
+            const title = titleElement.text().trim();
+            const link = titleElement.attr('href');
+            
+            // Extract main description (not the mobile-only paragraph)
+            const description = $description.find('p').not('.visible-xs').first().text().trim();
+            
+            // Extract eligibility information from the list items
+            const eligibilityItems: string[] = [];
+            $description.find('ul.fa-ul li').each((j, li) => {
+              const $li = $(li);
+              const text = $li.find('.trim').text().trim();
+              if (text && !text.includes('No Geographic Restrictions')) {
+                eligibilityItems.push(text);
+              }
             });
-          }
-        });
-        
-        // If no results with standard selectors, try alternative approach
-        if (scholarships.length === 0) {
-          // Look for scholarship data in structured format
-          $('div[class*="award"], div[class*="scholarship"]').each((i, elem) => {
-            const $elem = $(elem);
+            const eligibility = eligibilityItems.join(' | ');
             
-            // Try to extract from award blocks
-            const titleEl = $elem.find('h3, h2, h4, strong, b');
-            const amountEl = $elem.find('[class*="award"], [class*="amount"]');
-            const deadlineEl = $elem.find('[class*="deadline"], [class*="due"]');
-            
-            const title = titleEl.text().trim();
-            const amount = amountEl.text().trim();
-            const deadline = deadlineEl.text().trim();
-            const link = $elem.find('a').attr('href');
-            
-            if (title && title.length > 5) { // Filter out very short titles
+            if (title && !title.includes('Find Scholarships')) {
               scholarships.push({
                 title,
-                amount: amount || 'Amount varies',
-                deadline: deadline || 'No deadline specified',
-                url: link ? (link.startsWith('http') ? link : `http://www.collegescholarships.org${link}`) : '',
-                description: 'Scholarship from CollegeScholarships.org database',
+                amount,
+                deadline,
+                url: link || '',
+                description: description || 'No description available',
+                eligibility,
                 source: 'CollegeScholarships.org',
                 relevanceScore: 0
               });
             }
-          });
-        }
-        
-        // If still no results, try scraping from list format
-        if (scholarships.length === 0) {
-          $('li, .list-item').each((i, elem) => {
-            const $elem = $(elem);
-            const text = $elem.text().trim();
-            
-            // Look for patterns that indicate scholarship information
-            const amountMatch = text.match(/\$[\d,]+/);
-            const deadlineMatch = text.match(/(?:deadline|due|application).*?(?:january|february|march|april|may|june|july|august|september|october|november|december)/i);
-            
-            if (amountMatch && text.length > 20) {
-              const title = text.split('$')[0].trim();
-              const amount = amountMatch[0];
-              const deadline = deadlineMatch ? deadlineMatch[0] : 'No deadline specified';
-              const link = $elem.find('a').attr('href');
-              
-              if (title && title.length > 5) {
-                scholarships.push({
-                  title,
-                  amount,
-                  deadline,
-                  url: link ? (link.startsWith('http') ? link : `http://www.collegescholarships.org${link}`) : '',
-                  description: 'Scholarship from CollegeScholarships.org database',
-                  source: 'CollegeScholarships.org',
-                  relevanceScore: 0
-                });
-              }
-            }
-          });
-        }
-        
+          }
+        });
         return scholarships.slice(0, opts.maxResults);
         
       } catch (error) {
