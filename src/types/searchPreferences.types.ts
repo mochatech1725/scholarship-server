@@ -35,6 +35,7 @@ export interface ScholarshipSearchRequest {
 export interface ScholarshipResult {
   title: string;
   description: string;
+  organization?: string;
   amount?: string;
   deadline?: string;
   eligibility?: string;

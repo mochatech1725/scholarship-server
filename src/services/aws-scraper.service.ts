@@ -115,17 +115,14 @@ export class AWSScraperService {
 
   /**
    * Scrape CareerOneStop scholarships with search criteria
-   * Government-sponsored scholarship database - more reliable than commercial sites
    */
   async scrapeCareerOneStop(criteria?: SearchCriteria, options?: ScrapingOptions): Promise<ScholarshipResult[]> {
     const opts = { ...this.defaultOptions, ...options };
     
     return this.withRetry(async () => {
       try {
-        // CareerOneStop uses a different URL structure for search
         let searchUrl = 'https://www.careeronestop.org/Toolkit/Training/find-scholarships.aspx';
         
-        // Build search parameters for CareerOneStop
         if (criteria) {
           const params = new URLSearchParams();
           
@@ -136,7 +133,7 @@ export class AWSScraperService {
             // Map education levels to CareerOneStop's format
             const levelMap: Record<string, string> = {
               'High School': 'high-school',
-              'Undergraduate': 'undergraduate',
+              'Undergraduate': 'undergraduate', 
               'Graduate': 'graduate'
             };
             const mappedLevel = levelMap[criteria.academicLevel] || criteria.academicLevel.toLowerCase();
@@ -163,83 +160,90 @@ export class AWSScraperService {
         const $ = cheerio.load(response.data);
         const scholarships: ScholarshipResult[] = [];
         
-        // CareerOneStop specific selectors
-        $('.scholarship-item, .result-item, .search-result, .scholarship-card, .training-result').each((i, elem) => {
-          const $elem = $(elem);
+        // Parse the table structure based on the provided HTML
+        $('table tr').each((i, elem) => {
+          const $row = $(elem);
+          const $cells = $row.find('td');
           
-          // Try multiple selectors for different elements
-          const title = $elem.find('h3, h2, .title, .scholarship-title, .name, .result-title').text().trim();
-          const amount = $elem.find('.amount, .award-amount, .value, .scholarship-amount, .award').text().trim();
-          const deadline = $elem.find('.deadline, .due-date, .expires, .application-deadline, .deadline-date').text().trim();
-          const link = $elem.find('a').attr('href');
-          const description = $elem.find('.description, .summary, .details, .scholarship-description, .result-description').text().trim();
-          const eligibility = $elem.find('.eligibility, .requirements, .criteria, .qualifications').text().trim();
+          // Skip header rows and empty rows
+          if ($cells.length < 5) return;
           
-          if (title) {
+          // Extract data from each column based on the headers
+          const $nameCell = $cells.eq(0); // Award Name column
+          const $levelCell = $cells.eq(1); // Level of Study column  
+          const $typeCell = $cells.eq(2); // Award Type column
+          const $amountCell = $cells.eq(3); // Award Amount column
+          const $deadlineCell = $cells.eq(4); // Deadline column
+          
+          // Check if this is a scholarship (filter by award type)
+          const awardType = $typeCell.text().trim();
+          if (!awardType.toLowerCase().includes('scholarship')) {
+            return; // Skip non-scholarship entries
+          }
+          
+          // Extract scholarship details
+          const $link = $nameCell.find('a');
+          const title = ($link.text().trim() || $nameCell.find('.detailPageLink').text().trim()).replace(/"/g, '');
+          
+          if (!title || title === 'Award Name') return; // Skip invalid entries
+          
+          // Extract organization
+          const organizationText = $nameCell.text();
+          const orgMatch = organizationText.match(/Organization:\s*(.+?)(?:\n|<br>|Purposes:)/i);
+          const organization = orgMatch ? orgMatch[1].trim() : '';
+          
+          // Extract purposes/description
+          const purposesMatch = organizationText.match(/Purposes:\s*(.+?)$/i);
+          const purposes = purposesMatch ? purposesMatch[1].trim() : '';
+          
+          // Get the detail link
+          const detailLink = $link.attr('href');
+          const fullUrl = detailLink ? 
+            (detailLink.startsWith('http') ? detailLink : `https://www.careeronestop.org${detailLink}`) : '';
+          
+          const levelOfStudy = $levelCell.text().trim().replace(/\s+/g, ' ').replace(/\s*,\s*/g, ', ');
+           
+           if (levelOfStudy.toLowerCase() === 'professional development') {
+             return;
+           }
+          
+          // Extract award amount
+          const amount = $amountCell.find('.table-Numeric').text().trim() || 
+                       $amountCell.text().trim() || 
+                       'Amount not specified';
+          
+          // Extract deadline
+          const deadline = $deadlineCell.text().trim() || 'No deadline specified';
+          
+          // Build description
+          let description = '';
+          if (purposes) {
+            description = purposes;
+          } else {
+            description = `Scholarship offered by ${organization || 'CareerOneStop database'}`;
+          }
+          
+          if (levelOfStudy?.length > 0) {
             scholarships.push({
               title,
-              amount: amount || 'Amount varies',
-              deadline: deadline || 'No deadline specified',
-              url: link ? (link.startsWith('http') ? link : `https://www.careeronestop.org${link}`) : '',
-              description: description || 'No description available',
-              eligibility: eligibility || 'Eligibility requirements not specified',
+              amount,
+              deadline,
+              organization,
+              url: fullUrl,
+              description,
               source: 'CareerOneStop',
-              relevanceScore: 0
+              relevanceScore: 0,
+              academicLevel: levelOfStudy || undefined,
             });
           }
         });
         
-        // If no results with standard selectors, try alternative approach
-        if (scholarships.length === 0) {
-          // Look for scholarship data in JSON-LD or structured data
-          $('script[type="application/ld+json"]').each((i, elem) => {
-            try {
-              const jsonData = JSON.parse($(elem).html() || '{}');
-              if (jsonData['@type'] === 'Scholarship' || jsonData.name) {
-                scholarships.push({
-                  title: jsonData.name || jsonData.title || 'CareerOneStop Scholarship',
-                  description: jsonData.description || 'No description available',
-                  amount: jsonData.amount || jsonData.value || 'Amount varies',
-                  deadline: jsonData.deadline || jsonData.applicationDeadline || 'No deadline specified',
-                  url: jsonData.url || jsonData.link || '',
-                  eligibility: jsonData.eligibility || 'Eligibility requirements not specified',
-                  source: 'CareerOneStop',
-                  relevanceScore: 0
-                });
-              }
-            } catch (e) {
-              // Ignore JSON parsing errors
-            }
-          });
-        }
+        // Remove duplicates based on title
+        const uniqueScholarships = scholarships.filter((scholarship, index, self) =>
+          index === self.findIndex(s => s.title === scholarship.title)
+        );
         
-        if (scholarships.length === 0) {
-          $('table tr').each((i, elem) => {
-            const $row = $(elem);
-            const $cells = $row.find('td');
-            
-            if ($cells.length >= 3) {
-              const title = $cells.eq(0).text().trim();
-              const amount = $cells.eq(1).text().trim();
-              const deadline = $cells.eq(2).text().trim();
-              const link = $cells.eq(0).find('a').attr('href');
-              
-              if (title && title !== 'Scholarship Name') {
-                scholarships.push({
-                  title,
-                  amount: amount || 'Amount varies',
-                  deadline: deadline || 'No deadline specified',
-                  url: link ? (link.startsWith('http') ? link : `https://www.careeronestop.org${link}`) : '',
-                  description: 'Scholarship from CareerOneStop database',
-                  source: 'CareerOneStop',
-                  relevanceScore: 0
-                });
-              }
-            }
-          });
-        }
-        
-        return scholarships.slice(0, opts.maxResults);
+        return uniqueScholarships.slice(0, opts.maxResults);
         
       } catch (error) {
         console.error('CareerOneStop scraping error:', error);
@@ -321,7 +325,7 @@ export class AWSScraperService {
             const link = titleElement.attr('href');
             const description = $description.find('p').not('.visible-xs').first().text().trim();
             const eligibilityItems: string[] = [];
-            let academicLevelItems: string[] = [];;
+            let academicLevelItems: string[] = [];
             let geographicRestrictionsItems: string[] = [];
 
             $description.find('ul.fa-ul li').each((j, li) => {
@@ -382,6 +386,7 @@ export class AWSScraperService {
       eligibility: scholarship.eligibility || 'Eligibility requirements not specified',
       academicLevel: scholarship.academicLevel,
       geographicRestrictions: scholarship.geographicRestrictions,
+      organization: scholarship.organization,
       url: scholarship.url,
       source: scholarship.source,
       relevanceScore: scholarship.relevanceScore || 0
