@@ -113,11 +113,11 @@ Format the response as JSON.`;
     if (criteria.academicGPA) criteriaParts.push(`Minimum GPA: ${criteria.academicGPA}`);
     if (criteria.ethnicity) criteriaParts.push(`Ethnicity: ${criteria.ethnicity}`);
     if (criteria.gender) criteriaParts.push(`Gender: ${criteria.gender}`);
-    if (criteria.educationLevel) criteriaParts.push(`Education Level: ${criteria.educationLevel}`);
-    if (criteria.educationLevel) criteriaParts.push(`Academic Year: ${criteria.educationLevel}`);
+    if (criteria.academicLevel) criteriaParts.push(`Academic Level: ${criteria.academicLevel}`);
     if (criteria.essayRequired !== null) criteriaParts.push(`Essay Required: ${criteria.essayRequired}`);
     if (criteria.recommendationRequired !== null) criteriaParts.push(`Recommendation Required: ${criteria.recommendationRequired}`);
     if (criteria.keywords) criteriaParts.push(`Search Query: ${criteria.keywords}`);
+    if (criteria.geographicRestrictions) criteriaParts.push(`Geographic Restrictions: ${criteria.geographicRestrictions}`);
 
     const criteriaText = criteriaParts.length > 0 ? criteriaParts.join('\n') : 'No specific criteria provided';
 

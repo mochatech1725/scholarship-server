@@ -257,14 +257,14 @@ export class EnhancedAIService {
     return {
       subjectAreas: [],
       keywords: '',
-      educationLevel: null,
+      academicLevel: null,
       targetType: null,
       gender: null,
       ethnicity: null,
       academicGPA: null,
       essayRequired: null,
       recommendationRequired: null,
-      state: null
+      geographicRestrictions: null
     };
   }
 

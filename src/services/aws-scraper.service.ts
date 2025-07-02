@@ -312,7 +312,6 @@ export class AWSScraperService {
           const $description = $row.find('.scholarship-description');
           
           if ($summary.length > 0 && $description.length > 0) {
-            // Extract award amount from summary section
             const amount = $summary.find('.lead strong').text().trim() || 'Amount varies';
             
             const deadline = $summary.find('p').last().find('strong').text().trim() || 'No deadline specified';
@@ -320,33 +319,31 @@ export class AWSScraperService {
             const titleElement = $description.find('h4 a');
             const title = titleElement.text().trim();
             const link = titleElement.attr('href');
-            let academicLevel: string | null = null;
-            let geographicRestrictions: string | null = null;
-            
-            // Extract main description (not the mobile-only paragraph)
             const description = $description.find('p').not('.visible-xs').first().text().trim();
-            
-            // Extract eligibility information from the list items
             const eligibilityItems: string[] = [];
+            let academicLevelItems: string[] = [];;
+            let geographicRestrictionsItems: string[] = [];
+
             $description.find('ul.fa-ul li').each((j, li) => {
               const $li = $(li);
               const text = $li.find('.trim').text().trim();
               
               const $icon = $li.find('i');
               const iconClasses = $icon.attr('class') || '';
-              if (text) {
+              if (text.length > 0 && !text.includes('No Geographic Restrictions')) {
                 if (iconClasses.includes('fa-map-marker')) {
-                  geographicRestrictions = text;
+                  geographicRestrictionsItems.push(text);
                 } else if (iconClasses.includes('fa-graduation-cap')) {
-                  academicLevel = text;
+                  academicLevelItems.push(text);
                 } else {
-                  if (!text.includes('No Geographic Restrictions')) {
-                    eligibilityItems.push(text);
-                  }
+                  eligibilityItems.push(text);
                 }
               }
             });
             const eligibility = eligibilityItems.join(' | ');
+            const academicLevel = academicLevelItems.join(' | ');
+            const geographicRestrictions = geographicRestrictionsItems.join(' | ');
+            console.log(`eligibility: ${eligibility}, academicLevel: ${academicLevel}, geographicRestrictions: ${geographicRestrictions}`);
             
             if (title && !title.includes('Find Scholarships')) {
               scholarships.push({
@@ -383,6 +380,8 @@ export class AWSScraperService {
       amount: scholarship.amount,
       deadline: scholarship.deadline,
       eligibility: scholarship.eligibility || 'Eligibility requirements not specified',
+      academicLevel: scholarship.academicLevel,
+      geographicRestrictions: scholarship.geographicRestrictions,
       url: scholarship.url,
       source: scholarship.source,
       relevanceScore: scholarship.relevanceScore || 0

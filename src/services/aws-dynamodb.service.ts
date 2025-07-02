@@ -127,20 +127,20 @@ export class AWSDynamoDBService {
       // 7. Deadline
       // 8. Default to ActiveScholarshipsIndex
 
-      if (criteria.educationLevel) {
+      if (criteria.academicLevel) {
         indexName = 'EducationLevelIndex';
         keyConditionExpression = '#educationLevel = :educationLevel';
-        expressionAttributeValues[":educationLevel"] = { S: criteria.educationLevel };
+        expressionAttributeValues[":educationLevel"] = { S: criteria.academicLevel };
         expressionAttributeNames["#educationLevel"] = "educationLevel";
       } else if (criteria.subjectAreas && criteria.subjectAreas.length > 0) {
         indexName = 'MajorIndex';
         keyConditionExpression = '#major = :major';
         expressionAttributeValues[":major"] = { S: criteria.subjectAreas[0] }; // Use first subject area
         expressionAttributeNames["#major"] = "major";
-      } else if (criteria.state) {
+      } else if (criteria.geographicRestrictions) {
         indexName = 'LocationIndex';
         keyConditionExpression = '#state = :state';
-        expressionAttributeValues[":state"] = { S: criteria.state };
+        expressionAttributeValues[":state"] = { S: criteria.geographicRestrictions };
         expressionAttributeNames["#state"] = "state";
       } else if (criteria.ethnicity) {
         indexName = 'DemographicsIndex';
