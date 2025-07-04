@@ -35,7 +35,8 @@ export interface ScholarshipResult {
   title: string;
   description: string;
   organization?: string;
-  amount?: string;
+  minAward?: number;
+  maxAward?: number;
   deadline?: string;
   eligibility?: string;
   gender?: string;
@@ -46,6 +47,8 @@ export interface ScholarshipResult {
   recommendationRequired?: boolean;
   renewable?: boolean;
   geographicRestrictions?: string;
+  applyUrl?: string;
+  country?: string;
   source: string;
   url?: string;
   relevanceScore: number;
