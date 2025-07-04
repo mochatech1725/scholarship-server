@@ -21,7 +21,6 @@ export interface SearchCriteria {
     startDate?: string  // ISO date string
     endDate?: string    // ISO date string
   }
-  deadlineWithinDays?: number  // e.g., 30 for "due within 30 days"
 }
 
 export interface ScholarshipSearchRequest {

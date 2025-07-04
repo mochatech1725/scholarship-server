@@ -1,5 +1,5 @@
 {
-  "TableName": "Scholarships",
+  "TableName": "scholarships-dev",
   "BillingMode": "PAY_PER_REQUEST",
   "KeySchema": [
     {
@@ -17,7 +17,7 @@
       "AttributeType": "S"
     },
     {
-      "AttributeName": "educationLevel",
+      "AttributeName": "academicLevel",
       "AttributeType": "S"
     },
     {
@@ -29,7 +29,7 @@
       "AttributeType": "S"
     },
     {
-      "AttributeName": "state",
+      "AttributeName": "geographicRestrictions",
       "AttributeType": "S"
     },
     {
@@ -43,6 +43,10 @@
     {
       "AttributeName": "minimumGPA",
       "AttributeType": "N"
+    },
+    {
+      "AttributeName": "renewable",
+      "AttributeType": "S"
     }
   ],
   "GlobalSecondaryIndexes": [
@@ -59,10 +63,10 @@
       }
     },
     {
-      "IndexName": "EducationLevelIndex",
+      "IndexName": "AcademicLevelIndex",
       "KeySchema": [
         {
-          "AttributeName": "educationLevel",
+          "AttributeName": "academicLevel",
           "KeyType": "HASH"
         }
       ],
@@ -95,10 +99,10 @@
       }
     },
     {
-      "IndexName": "LocationIndex",
+      "IndexName": "GeographicRestrictionsIndex",
       "KeySchema": [
         {
-          "AttributeName": "state",
+          "AttributeName": "geographicRestrictions",
           "KeyType": "HASH"
         }
       ],
@@ -135,6 +139,18 @@
       "KeySchema": [
         {
           "AttributeName": "minimumGPA",
+          "KeyType": "HASH"
+        }
+      ],
+      "Projection": {
+        "ProjectionType": "ALL"
+      }
+    },
+    {
+      "IndexName": "RenewableIndex",
+      "KeySchema": [
+        {
+          "AttributeName": "renewable",
           "KeyType": "HASH"
         }
       ],

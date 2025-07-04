@@ -157,12 +157,7 @@ export class AWSDynamoDBService {
         keyConditionExpression = '#minimumGPA = :gpa';
         expressionAttributeValues[":gpa"] = { N: criteria.academicGPA.toString() };
         expressionAttributeNames["#minimumGPA"] = "minimumGPA";
-      } else if (criteria.deadlineRange || criteria.deadlineWithinDays) {
-        // For deadline queries, use ActiveScholarshipsIndex and filter by deadline
-        indexName = 'ActiveScholarshipsIndex';
-        keyConditionExpression = 'active = :active';
-        // Deadline filtering will be done in FilterExpression
-      }
+      } 
 
       // Build filter expressions for non-primary key attributes
       const filterExpressions: string[] = [];
@@ -183,12 +178,6 @@ export class AWSDynamoDBService {
           expressionAttributeValues[":endDate"] = { S: criteria.deadlineRange.endDate };
           expressionAttributeNames["#deadline"] = "deadline";
         }
-      } else if (criteria.deadlineWithinDays) {
-        const futureDate = new Date();
-        futureDate.setDate(futureDate.getDate() + criteria.deadlineWithinDays);
-        filterExpressions.push("#deadline <= :futureDate");
-        expressionAttributeValues[":futureDate"] = { S: futureDate.toISOString().split('T')[0] };
-        expressionAttributeNames["#deadline"] = "deadline";
       }
 
       // Filter for additional subject areas (if using MajorIndex)
