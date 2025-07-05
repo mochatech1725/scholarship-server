@@ -1,0 +1,409 @@
+import AWSDynamoDBService from './aws-dynamodb.service.js';
+import { ScholarshipItem, SearchCriteria, SearchOptions } from '../types/searchPreferences.types.js';
+
+export class ScholarshipSearchService {
+  private dynamoDBService: AWSDynamoDBService;
+
+  constructor() {
+    this.dynamoDBService = new AWSDynamoDBService();
+  }
+
+  /**
+   * Search scholarships with advanced filtering and ranking
+   */
+  async searchScholarships(
+    criteria: SearchCriteria, 
+    options: SearchOptions = {}
+  ): Promise<{
+    scholarships: ScholarshipItem[];
+    totalFound: number;
+    searchTime: number;
+    filters: {
+      applied: string[];
+      available: string[];
+    };
+  }> {
+    const startTime = Date.now();
+    
+    try {
+      // Get raw results from DynamoDB
+      const dynamoResults = await this.dynamoDBService.searchScholarships(criteria);
+      
+      // Convert to ScholarshipItem format
+      let scholarships = this.convertDynamoToResults(dynamoResults);
+      
+      // Apply additional filters
+      scholarships = this.applyFilters(scholarships, criteria, options);
+      
+      // Sort results
+      scholarships = this.sortScholarships(scholarships, options.sortBy || 'relevance', options.sortOrder || 'desc');
+      
+      // Calculate relevance scores
+      scholarships = scholarships.map(scholarship => ({
+        ...scholarship,
+        relevanceScore: this.calculateRelevanceScore(scholarship, criteria)
+      }));
+      
+      // Limit results
+      const maxResults = options.maxResults || 25;
+      const finalResults = scholarships.slice(0, maxResults);
+      
+      const searchTime = Date.now() - startTime;
+      
+      return {
+        scholarships: finalResults,
+        totalFound: finalResults.length,
+        searchTime,
+        filters: {
+          applied: this.getAppliedFilters(criteria),
+          available: this.getAvailableFilters(scholarships)
+        }
+      };
+      
+    } catch (error) {
+      console.error('Scholarship search failed:', error);
+      throw new Error(`Search failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  }
+
+  /**
+   * Convert DynamoDB items to scholarship results with new schema
+   */
+  private convertDynamoToResults(items: ScholarshipItem[]): ScholarshipItem[] {
+    return items.map(item => ({
+      title: item.title,
+      description: item.description,
+      organization: item.organization,
+      minAward: this.parseAmount(item.minAward),
+      maxAward: this.parseAmount(item.maxAward),
+      deadline: item.deadline,
+      eligibility: item.eligibility,
+      gender: item.gender,
+      ethnicity: item.ethnicity,
+      academicLevel: item.academicLevel,
+      academicGPA: item.academicGPA,
+      essayRequired: Boolean(item.essayRequired),
+      recommendationRequired: Boolean(item.recommendationRequired),
+      renewable: Boolean(item.renewable),
+      geographicRestrictions: item.geographicRestrictions,
+      applyUrl: item.applyUrl,
+      country: item.country,
+      subjectAreas: item.subjectAreas,
+      source: item.source || 'dynamodb',
+      url: item.url,
+      relevanceScore: 0 // Will be calculated later
+    }));
+  }
+
+  /**
+   * Parse amount string to number
+   */
+  private parseAmount(amount: string | number | undefined): number | undefined {
+    if (typeof amount === 'number') return amount;
+    if (!amount) return undefined;
+    
+    // Remove currency symbols and commas, extract numbers
+    const cleaned = amount.toString().replace(/[$,€£¥]/g, '').replace(/,/g, '');
+    const match = cleaned.match(/(\d+(?:\.\d+)?)/);
+    return match ? parseFloat(match[1]) : undefined;
+  }
+
+  /**
+   * Apply minimal post-processing filters (most filtering now done at DB level)
+   */
+  private applyFilters(
+    scholarships: ScholarshipItem[], 
+    criteria: SearchCriteria, 
+    options: SearchOptions
+  ): ScholarshipItem[] {
+    return scholarships.filter(scholarship => {
+      // Only filter by deadline if specified (not handled by DB)
+      if (!options.includeExpired && scholarship.deadline) {
+        const deadline = new Date(scholarship.deadline);
+        if (deadline < new Date()) return false;
+      }
+
+      return true;
+    });
+  }
+
+  /**
+   * Sort scholarships by specified criteria
+   */
+  private sortScholarships(
+    scholarships: ScholarshipItem[], 
+    sortBy: string, 
+    sortOrder: string
+  ): ScholarshipItem[] {
+    return scholarships.sort((a, b) => {
+      let comparison = 0;
+      
+      switch (sortBy) {
+        case 'deadline':
+          comparison = this.compareDates(a.deadline, b.deadline);
+          break;
+        case 'amount':
+          comparison = this.compareAmounts(a.maxAward, b.maxAward);
+          break;
+        case 'title':
+          comparison = (a.title || '').localeCompare(b.title || '');
+          break;
+        case 'relevance':
+        default:
+          comparison = (b.relevanceScore || 0) - (a.relevanceScore || 0);
+          break;
+      }
+      
+      return sortOrder === 'asc' ? comparison : -comparison;
+    });
+  }
+
+  /**
+   * Compare dates for sorting
+   */
+  private compareDates(dateA?: string, dateB?: string): number {
+    if (!dateA && !dateB) return 0;
+    if (!dateA) return 1;
+    if (!dateB) return -1;
+    
+    const a = new Date(dateA);
+    const b = new Date(dateB);
+    return a.getTime() - b.getTime();
+  }
+
+  /**
+   * Compare amounts for sorting
+   */
+  private compareAmounts(amountA?: number, amountB?: number): number {
+    if (!amountA && !amountB) return 0;
+    if (!amountA) return 1;
+    if (!amountB) return -1;
+    
+    return amountA - amountB;
+  }
+
+  /**
+   * Calculate relevance score based on search criteria
+   */
+  private calculateRelevanceScore(scholarship: ScholarshipItem, criteria: SearchCriteria): number {
+    let score = 0;
+    
+    // Build search text and terms for scoring
+    const searchText = this.buildSearchTextForScoring(scholarship);
+    const searchTerms = this.buildSearchTermsForScoring(criteria);
+    
+    // Calculate matches for comprehensive text search
+    if (searchTerms.length > 0) {
+      const matchedTerms = searchTerms.filter((term: string) => 
+        searchText.toLowerCase().includes(term.toLowerCase())
+      );
+      
+      // Base score for having any matches
+      if (matchedTerms.length > 0) {
+        score += 10;
+        
+        // Bonus for matching more terms
+        const matchRatio = matchedTerms.length / searchTerms.length;
+        score += Math.round(matchRatio * 20);
+        
+        // Bonus for exact matches in title
+        const title = (scholarship.title || '').toLowerCase();
+        const titleMatches = searchTerms.filter((term: string) => 
+          title.includes(term.toLowerCase())
+        );
+        score += titleMatches.length * 5;
+      }
+    }
+    
+    // Legacy scoring for backward compatibility
+    // Keyword matching in title and description
+    if (criteria.keywords) {
+      const keywords = criteria.keywords.toLowerCase().split(' ');
+      const title = (scholarship.title || '').toLowerCase();
+      const description = (scholarship.description || '').toLowerCase();
+      
+      keywords.forEach(keyword => {
+        if (title.includes(keyword)) score += 10;
+        if (description.includes(keyword)) score += 5;
+      });
+    }
+
+    // Subject area matching
+    if (criteria.subjectAreas && scholarship.subjectAreas) {
+      const scholarshipSubjects = scholarship.subjectAreas.map(s => s.toLowerCase());
+      criteria.subjectAreas.forEach(subject => {
+        if (scholarshipSubjects.some(s => s.includes(subject.toLowerCase()))) {
+          score += 8;
+        }
+      });
+    }
+
+    // Academic level matching
+    if (criteria.academicLevel && scholarship.academicLevel) {
+      if (scholarship.academicLevel.toLowerCase().includes(criteria.academicLevel.toLowerCase())) {
+        score += 7;
+      }
+    }
+
+    // Geographic restrictions matching
+    if (criteria.geographicRestrictions && scholarship.geographicRestrictions) {
+      if (scholarship.geographicRestrictions.toLowerCase().includes(criteria.geographicRestrictions.toLowerCase())) {
+        score += 6;
+      }
+    }
+
+    // Demographics matching
+    if (criteria.gender && scholarship.gender) {
+      if (scholarship.gender.toLowerCase() === criteria.gender.toLowerCase()) {
+        score += 5;
+      }
+    }
+
+    if (criteria.ethnicity && scholarship.ethnicity) {
+      if (scholarship.ethnicity.toLowerCase() === criteria.ethnicity.toLowerCase()) {
+        score += 5;
+      }
+    }
+
+    return score;
+  }
+
+  /**
+   * Build searchable text from scholarship fields for scoring
+   */
+  private buildSearchTextForScoring(scholarship: ScholarshipItem): string {
+    const textParts: string[] = [];
+    
+    if (scholarship.eligibility) textParts.push(scholarship.eligibility);
+    if (scholarship.description) textParts.push(scholarship.description);
+    if (scholarship.title) textParts.push(scholarship.title);
+    if (scholarship.organization) textParts.push(scholarship.organization);
+    if (scholarship.subjectAreas) textParts.push(scholarship.subjectAreas.join(' '));
+    if (scholarship.major) textParts.push(scholarship.major);
+    
+    return textParts.join(' ');
+  }
+
+  /**
+   * Build search terms from criteria for scoring
+   */
+  private buildSearchTermsForScoring(criteria: SearchCriteria): string[] {
+    const terms: string[] = [];
+    
+    // Add subject areas
+    if (criteria.subjectAreas && criteria.subjectAreas.length > 0) {
+      terms.push(...criteria.subjectAreas);
+    }
+    
+    // Add target type (if not 'Both')
+    if (criteria.targetType && criteria.targetType !== 'Both') {
+      terms.push(criteria.targetType);
+    }
+    
+    // Add ethnicity
+    if (criteria.ethnicity) {
+      terms.push(criteria.ethnicity);
+    }
+    
+    // Add gender
+    if (criteria.gender) {
+      terms.push(criteria.gender);
+    }
+    
+    // Add keywords (split into individual words)
+    if (criteria.keywords) {
+      const keywordTerms = criteria.keywords
+        .split(/\s+/)
+        .filter(word => word.length > 0);
+      terms.push(...keywordTerms);
+    }
+    
+    return terms;
+  }
+
+  /**
+   * Get list of applied filters
+   */
+  private getAppliedFilters(criteria: SearchCriteria): string[] {
+    const filters: string[] = [];
+    
+    if (criteria.keywords) filters.push(`Keywords: ${criteria.keywords}`);
+    if (criteria.academicLevel) filters.push(`Academic Level: ${criteria.academicLevel}`);
+    if (criteria.subjectAreas?.length) filters.push(`Subjects: ${criteria.subjectAreas.join(', ')}`);
+    if (criteria.targetType && criteria.targetType !== 'Both') filters.push(`Target Type: ${criteria.targetType}`);
+    if (criteria.gender) filters.push(`Gender: ${criteria.gender}`);
+    if (criteria.ethnicity) filters.push(`Ethnicity: ${criteria.ethnicity}`);
+    if (criteria.geographicRestrictions) filters.push(`Location: ${criteria.geographicRestrictions}`);
+    if (criteria.academicGPA) filters.push(`Min GPA: ${criteria.academicGPA}`);
+    
+    return filters;
+  }
+
+  /**
+   * Get available filter options from results
+   */
+  private getAvailableFilters(scholarships: ScholarshipItem[]): string[] {
+    const filters: string[] = [];
+    
+    // Collect unique values for each filter type
+    const academicLevels = new Set<string>();
+    const countries = new Set<string>();
+    const organizations = new Set<string>();
+    
+    scholarships.forEach(scholarship => {
+      if (scholarship.academicLevel) academicLevels.add(scholarship.academicLevel);
+      if (scholarship.country) countries.add(scholarship.country);
+      if (scholarship.organization) organizations.add(scholarship.organization);
+    });
+    
+    if (academicLevels.size > 0) filters.push(`Academic Levels: ${Array.from(academicLevels).join(', ')}`);
+    if (countries.size > 0) filters.push(`Countries: ${Array.from(countries).join(', ')}`);
+    if (organizations.size > 0) filters.push(`Organizations: ${Array.from(organizations).join(', ')}`);
+    
+    return filters;
+  }
+
+  /**
+   * Get scholarship by ID
+   */
+  async getScholarshipById(id: string): Promise<ScholarshipItem | null> {
+    try {
+      const item = await this.dynamoDBService.getScholarshipById(id);
+      if (!item) return null;
+      
+      const results = this.convertDynamoToResults([item]);
+      return results[0];
+    } catch (error) {
+      console.error('Error getting scholarship by ID:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Get scholarship statistics
+   */
+  async getStatistics(): Promise<{
+    totalScholarships: number;
+    totalAmount: number;
+    averageAmount: number;
+    countries: string[];
+    academicLevels: string[];
+  }> {
+    try {
+      // This would need to be implemented in DynamoDB service
+      // For now, return placeholder data
+      return {
+        totalScholarships: 0,
+        totalAmount: 0,
+        averageAmount: 0,
+        countries: [],
+        academicLevels: []
+      };
+    } catch (error) {
+      console.error('Error getting statistics:', error);
+      throw error;
+    }
+  }
+}
+
+export default ScholarshipSearchService; 

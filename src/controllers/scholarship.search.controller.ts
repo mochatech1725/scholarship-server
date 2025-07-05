@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 import dotenv from 'dotenv';
 
 import EnhancedAIService, { EnhancedSearchRequest } from '../ai/enhanced-ai.service.js';
-import { ScholarshipResult } from '../types/searchPreferences.types.js';
+import { ScholarshipItem } from '../types/searchPreferences.types.js';
 
 dotenv.config();
 
@@ -13,7 +13,7 @@ const enhancedAIService = new EnhancedAIService();
  * @param scholarships - Array of scholarship results from the service
  * @returns Processed scholarship results with eligibility as string
  */
-const convertScholarshipResults = (scholarships: ScholarshipResult[]): ScholarshipResult[] => {
+const convertScholarshipItems = (scholarships: ScholarshipItem[]): ScholarshipItem[] => {
   return scholarships.map(scholarship => {
     let eligibility = scholarship.eligibility;
     
@@ -68,7 +68,7 @@ export const findScholarships = async (req: Request, res: Response) => {
     const result = await enhancedAIService.searchScholarships(searchRequest);
     
     // Convert scholarship results to handle eligibility field conversion
-    const convertedScholarships = convertScholarshipResults(result.scholarships);
+    const convertedScholarships = convertScholarshipItems(result.scholarships);
     
     res.json({
       success: true,

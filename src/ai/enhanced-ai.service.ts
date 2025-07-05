@@ -1,8 +1,7 @@
 import AWSBedrockService from '../services/aws-bedrock.service.js';
 import AWSComprehendService from '../services/aws-comprehend.service.js';
-import AWSDynamoDBService, { ScholarshipItem } from '../services/aws-dynamodb.service.js';
-import AWSScraperService from '../services/aws-scraper.service.js';
-import { ScholarshipResult, SearchCriteria } from '../types/searchPreferences.types.js';
+import ScholarshipSearchService from '../services/scholarship-search.service.js';
+import { ScholarshipItem, SearchCriteria } from '../types/searchPreferences.types.js';
 
 export interface EnhancedSearchRequest {
   searchCriteria: SearchCriteria;
@@ -10,7 +9,7 @@ export interface EnhancedSearchRequest {
 }
 
 export interface EnhancedSearchResponse {
-  scholarships: ScholarshipResult[];
+  scholarships: ScholarshipItem[];
   sources: {
     dynamodb: number;
     ai: number;
@@ -31,35 +30,35 @@ export interface EnhancedSearchResponse {
 export class EnhancedAIService {
   private bedrockService: AWSBedrockService;
   private comprehendService: AWSComprehendService;
-  private dynamoDBService: AWSDynamoDBService;
-  private scraperService: AWSScraperService;
+  private searchService: ScholarshipSearchService;
 
   constructor() {
     this.bedrockService = new AWSBedrockService();
     this.comprehendService = new AWSComprehendService();
-    this.dynamoDBService = new AWSDynamoDBService();
-    this.scraperService = new AWSScraperService();
+    this.searchService = new ScholarshipSearchService();
   }
 
   /**
-   * Enhanced scholarship search using multiple AWS services
+   * Enhanced scholarship search using search service and AI
    * @param request - Enhanced search request
    * @returns Promise with comprehensive search results
    */
   async searchScholarships(request: EnhancedSearchRequest): Promise<EnhancedSearchResponse> {
     const startTime = Date.now();
     const servicesUsed: string[] = [];
-    const allScholarships: ScholarshipResult[] = [];
+    let allScholarships: ScholarshipItem[] = [];
 
     try {
-
+      // 1. Search DynamoDB using the search service
       try {
-        const dynamoResults = await this.dynamoDBService.searchScholarships(request.searchCriteria);
-        const convertedResults = this.convertDynamoToResults(dynamoResults);
-        allScholarships.push(...convertedResults);
+        const searchResults = await this.searchService.searchScholarships(
+          request.searchCriteria,
+          { maxResults: request.maxResults || 25 }
+        );
+        allScholarships = searchResults.scholarships;
         servicesUsed.push('dynamodb');
       } catch (error) {
-        console.error('DynamoDB search failed:', error);
+        console.error('Search service failed:', error);
       }
 
       // 2. Use AWS Bedrock for AI-generated recommendations
@@ -72,23 +71,7 @@ export class EnhancedAIService {
         console.error('Bedrock AI search failed:', error);
       }
 
-      // 3. Scrape scholarship websites for real-time data
-      try {
-        const scrapedResults = await this.scraperService.scrapeAllScholarships(
-          request.searchCriteria,
-          {
-            maxResults: request.maxResults || 10,
-            timeout: 20000,
-            retryAttempts: 2
-          }
-        );
-        allScholarships.push(...scrapedResults);
-        servicesUsed.push('scraping');
-      } catch (error) {
-        console.error('Web scraping failed:', error);
-      }
-
-      // 4. Analyze results with Comprehend if requested
+      // 3. Analyze results with Comprehend if requested
       let analysis = undefined;
       if (allScholarships.length > 0) {
         try {
@@ -102,10 +85,10 @@ export class EnhancedAIService {
         }
       }
 
-      // 5. Deduplicate and rank results
+      // 4. Deduplicate and rank results
       const deduplicatedResults = this.deduplicateScholarships(allScholarships);
       const rankedResults = this.rankScholarships(deduplicatedResults, request.searchCriteria);
-      const finalResults = rankedResults.slice(0, request.maxResults || 10);
+      const finalResults = rankedResults.slice(0, request.maxResults || 25);
 
       const searchTime = Date.now() - startTime;
 
@@ -114,7 +97,7 @@ export class EnhancedAIService {
         sources: {
           dynamodb: allScholarships.filter(s => s.source === 'dynamodb').length,
           ai: allScholarships.filter(s => s.source === 'bedrock-ai').length,
-          scraping: allScholarships.filter(s => s.source !== 'dynamodb' && s.source !== 'bedrock-ai').length,
+          scraping: 0, // No more scraping
         },
         analysis,
         metadata: {
@@ -131,36 +114,12 @@ export class EnhancedAIService {
   }
 
   /**
-   * Convert DynamoDB items to scholarship results
-   * @param items - DynamoDB items
-   * @returns Array of scholarship results
-   */
-  private convertDynamoToResults(items: ScholarshipItem[]): ScholarshipResult[] {
-    return items.map(item => ({
-      title: item.title,
-      description: item.description,
-      amount: item.amount,
-      deadline: item.deadline,
-      eligibility: item.eligibility,
-      url: item.url,
-      source: 'dynamodb',
-      gender: item.gender,
-      ethnicity: item.ethnicity,
-      academicLevel: item.educationLevel,
-      academicGPA: item.gpa,
-      essayRequired: item.essayRequired === 'true',
-      recommendationRequired: item.recommendationRequired === 'true',
-      relevanceScore: this.calculateRelevanceScore(item, this.createDefaultSearchFilters())
-    }));
-  }
-
-  /**
    * Convert AI results to scholarship format
    * @param aiResults - Raw AI results
    * @returns Array of scholarship results
    */
-  private convertAIResultsToScholarships(aiResults: any): ScholarshipResult[] {
-    const scholarships: ScholarshipResult[] = [];
+  private convertAIResultsToScholarships(aiResults: any): ScholarshipItem[] {
+    const scholarships: ScholarshipItem[] = [];
 
     try {
       let results = aiResults;
@@ -175,10 +134,11 @@ export class EnhancedAIService {
 
       for (const item of results) {
         if (item && typeof item === 'object') {
-          const scholarship: ScholarshipResult = {
+          const scholarship: ScholarshipItem = {
             title: item.title || item.name || 'AI Generated Scholarship',
             description: item.description || item.desc || 'No description available',
-            amount: item.amount || item.award_amount || 'Amount not specified',
+            minAward: this.parseAmount(item.amount || item.award_amount),
+            maxAward: this.parseAmount(item.amount || item.award_amount),
             deadline: item.deadline || item.due_date || 'Deadline not specified',
             eligibility: item.eligibility || item.requirements || 'Eligibility requirements not specified',
             url: item.url || item.link || '',
@@ -199,6 +159,18 @@ export class EnhancedAIService {
     }
 
     return scholarships;
+  }
+
+  /**
+   * Parse amount string to number
+   */
+  private parseAmount(amount: string | number | undefined): number | undefined {
+    if (typeof amount === 'number') return amount;
+    if (!amount) return undefined;
+    
+    const cleaned = amount.toString().replace(/[$,€£¥]/g, '').replace(/,/g, '');
+    const match = cleaned.match(/(\d+(?:\.\d+)?)/);
+    return match ? parseFloat(match[1]) : undefined;
   }
 
   /**
@@ -236,9 +208,9 @@ export class EnhancedAIService {
    * @param scholarships - Array of scholarships
    * @returns Deduplicated array
    */
-  private deduplicateScholarships(scholarships: ScholarshipResult[]): ScholarshipResult[] {
+  private deduplicateScholarships(scholarships: ScholarshipItem[]): ScholarshipItem[] {
     const seen = new Set<string>();
-    const unique: ScholarshipResult[] = [];
+    const unique: ScholarshipItem[] = [];
     for (const scholarship of scholarships) {
       const key = `${scholarship.title.toLowerCase()}_${scholarship.source}`;
       if (!seen.has(key)) {
@@ -276,9 +248,39 @@ export class EnhancedAIService {
    */
   private calculateRelevanceScore(scholarship: any, criteria: SearchCriteria): number {
     let score = 0;
+    
+    // Basic scoring
     if (scholarship.title) score += 1;
     if (scholarship.description) score += 1;
     if (scholarship.amount) score += 1;
+    
+    // Comprehensive text search scoring
+    const searchText = this.buildSearchText(scholarship);
+    const searchTerms = this.buildSearchTerms(criteria);
+    
+    if (searchTerms.length > 0) {
+      const matchedTerms = searchTerms.filter(term => 
+        searchText.toLowerCase().includes(term.toLowerCase())
+      );
+      
+      // Base score for having any matches
+      if (matchedTerms.length > 0) {
+        score += 10;
+        
+        // Bonus for matching more terms
+        const matchRatio = matchedTerms.length / searchTerms.length;
+        score += Math.round(matchRatio * 20);
+        
+        // Bonus for exact matches in title
+        const title = (scholarship.title || '').toLowerCase();
+        const titleMatches = searchTerms.filter(term => 
+          title.includes(term.toLowerCase())
+        );
+        score += titleMatches.length * 5;
+      }
+    }
+    
+    // Legacy scoring for backward compatibility
     if (criteria.subjectAreas && criteria.subjectAreas.length > 0) {
       const majorMatch = criteria.subjectAreas.some(major => 
         scholarship.academicLevel?.toLowerCase().includes(major.toLowerCase())
@@ -295,12 +297,65 @@ export class EnhancedAIService {
   }
 
   /**
+   * Build searchable text from scholarship fields
+   */
+  private buildSearchText(scholarship: any): string {
+    const textParts: string[] = [];
+    
+    if (scholarship.eligibility) textParts.push(scholarship.eligibility);
+    if (scholarship.description) textParts.push(scholarship.description);
+    if (scholarship.title) textParts.push(scholarship.title);
+    if (scholarship.organization) textParts.push(scholarship.organization);
+    if (scholarship.subjectAreas) textParts.push(scholarship.subjectAreas.join(' '));
+    if (scholarship.major) textParts.push(scholarship.major);
+    
+    return textParts.join(' ');
+  }
+
+  /**
+   * Build search terms from criteria
+   */
+  private buildSearchTerms(criteria: SearchCriteria): string[] {
+    const terms: string[] = [];
+    
+    // Add subject areas
+    if (criteria.subjectAreas && criteria.subjectAreas.length > 0) {
+      terms.push(...criteria.subjectAreas);
+    }
+    
+    // Add target type (if not 'Both')
+    if (criteria.targetType && criteria.targetType !== 'Both') {
+      terms.push(criteria.targetType);
+    }
+    
+    // Add ethnicity
+    if (criteria.ethnicity) {
+      terms.push(criteria.ethnicity);
+    }
+    
+    // Add gender
+    if (criteria.gender) {
+      terms.push(criteria.gender);
+    }
+    
+    // Add keywords (split into individual words)
+    if (criteria.keywords) {
+      const keywordTerms = criteria.keywords
+        .split(/\s+/)
+        .filter(word => word.length > 0);
+      terms.push(...keywordTerms);
+    }
+    
+    return terms;
+  }
+
+  /**
    * Rank scholarships based on relevance to search criteria
    * @param scholarships - Array of scholarships
    * @param criteria - Search criteria
    * @returns Ranked array
    */
-  private rankScholarships(scholarships: ScholarshipResult[], criteria: SearchCriteria): ScholarshipResult[] {
+  private rankScholarships(scholarships: ScholarshipItem[], criteria: SearchCriteria): ScholarshipItem[] {
     return scholarships.sort((a, b) => {
       let scoreA = 0;
       let scoreB = 0;
@@ -332,42 +387,6 @@ export class EnhancedAIService {
       if (b.source === 'bedrock-ai') scoreB += 2;
       return scoreB - scoreA;
     });
-  }
-
-  /**
-   * Store scholarship in DynamoDB
-   * @param scholarship - Scholarship to store
-   * @returns Promise with stored scholarship
-   */
-  async storeScholarship(scholarship: Omit<ScholarshipItem, 'id' | 'createdAt' | 'updatedAt'>): Promise<ScholarshipItem> {
-    // Convert string boolean values to actual booleans for DynamoDB input
-    const input: any = {
-      ...scholarship,
-      active: scholarship.active === 'true',
-      essayRequired: scholarship.essayRequired === 'true',
-      recommendationRequired: scholarship.recommendationRequired === 'true'
-    };
-    return await this.dynamoDBService.storeScholarship(input);
-  }
-
-  /**
-   * Get scholarship by ID from DynamoDB
-   * @param id - Scholarship ID
-   * @returns Promise with scholarship or null
-   */
-  async getScholarshipById(id: string): Promise<ScholarshipItem | null> {
-    return await this.dynamoDBService.getScholarshipById(id);
-  }
-
-  /**
-   * Cleanup resources - close browser and other connections
-   */
-  async cleanup(): Promise<void> {
-    try {
-      await this.scraperService.closeBrowser();
-    } catch (error) {
-      console.error('Error during cleanup:', error);
-    }
   }
 }
 

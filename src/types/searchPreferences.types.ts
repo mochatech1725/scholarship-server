@@ -17,6 +17,8 @@ export interface SearchCriteria {
   academicGPA: number | null
   essayRequired: boolean | null
   recommendationRequired: boolean | null
+  minAmount?: number
+  maxAmount?: number
   deadlineRange?: {
     startDate?: string  // ISO date string
     endDate?: string    // ISO date string
@@ -30,8 +32,9 @@ export interface ScholarshipSearchRequest {
   useRealScraping?: boolean;
 }
 
-// Interface for scholarship result
-export interface ScholarshipResult {
+// Interface for scholarship item (used for API responses)
+export interface ScholarshipItem {
+  id?: string;
   title: string;
   description: string;
   organization?: string;
@@ -49,15 +52,31 @@ export interface ScholarshipResult {
   geographicRestrictions?: string;
   applyUrl?: string;
   country?: string;
+  subjectAreas?: string[];
   source: string;
   url?: string;
-  relevanceScore: number;
+  relevanceScore?: number;
+  // Additional fields
+  targetType?: string;
+  major?: string;
+  state?: string;
+  minimumGPA?: number;
+}
+
+// Interface for DynamoDB storage (with string boolean values)
+export interface ScholarshipDBItem extends Omit<ScholarshipItem, 'essayRequired' | 'recommendationRequired' | 'renewable'> {
+  essayRequired?: string; // "true" or "false" for DynamoDB
+  recommendationRequired?: string; // "true" or "false" for DynamoDB
+  renewable?: string; // "true" or "false" for DynamoDB
+  active?: string; // "true" or "false" for DynamoDB
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface SearchResponse {
   success: boolean;
   data: {
-    scholarships: ScholarshipResult[];
+    scholarships: ScholarshipItem[];
     totalFound: number;
     searchTimestamp: string;
   };
@@ -86,6 +105,14 @@ export interface SourcesResponse {
     }>;
     totalSources: number;
   };
+}
+
+// Search options for advanced filtering and sorting
+export interface SearchOptions {
+  maxResults?: number;
+  sortBy?: 'relevance' | 'deadline' | 'amount' | 'title';
+  sortOrder?: 'asc' | 'desc';
+  includeExpired?: boolean;
 }
 // --- End Scholarship Types ---
 

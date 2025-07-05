@@ -8,55 +8,14 @@ import {
 } from "@aws-sdk/client-dynamodb";
 import { marshall, unmarshall } from "@aws-sdk/util-dynamodb";
 import { dynamoDBClient, awsServiceConfig } from '../config/aws.config.js';
-import { SearchCriteria } from '../types/searchPreferences.types.js';
+import { SearchCriteria, ScholarshipItem } from '../types/searchPreferences.types.js';
 
-export interface ScholarshipItem {
-  id: string;
-  title: string;
-  organization: string;
-  description: string;
-  amount: string;
-  deadline: string;
-  eligibility: string;
-  targetType: string;
-  gender?: string;
-  ethnicity?: string;
-  educationLevel: string;
-  gpa?: number;
-  essayRequired: string; // "true" or "false" for DynamoDB
-  recommendationRequired: string; // "true" or "false" for DynamoDB
-  url: string;
-  source: string;
-  active: string; // "true" or "false" for DynamoDB
-  createdAt: string;
-  updatedAt: string;
-  // Searchable fields for GSI
-  major?: string;
-  state?: string;
-  minimumGPA?: number;
-}
-
-// Interface for input data with boolean values
-export interface ScholarshipInput {
-  title: string;
-  organization: string;
-  description: string;
-  amount: string;
-  deadline: string;
-  eligibility: string;
-  targetType: string;
-  gender?: string;
-  ethnicity?: string;
-  educationLevel: string;
-  gpa?: number;
+// Interface for input data with boolean values (for API input)
+export interface ScholarshipInput extends Omit<ScholarshipItem, 'id' | 'createdAt' | 'updatedAt' | 'essayRequired' | 'recommendationRequired' | 'renewable'> {
   essayRequired: boolean;
   recommendationRequired: boolean;
-  url: string;
-  source: string;
+  renewable?: boolean;
   active: boolean;
-  major?: string;
-  state?: string;
-  minimumGPA?: number;
 }
 
 export class AWSDynamoDBService {
@@ -69,161 +28,318 @@ export class AWSDynamoDBService {
   }
 
   /**
-   * Store a new scholarship in DynamoDB
-   * @param scholarship - Scholarship data to store (with boolean values)
-   * @returns Promise with the stored item
-   */
-  async storeScholarship(scholarship: ScholarshipInput): Promise<ScholarshipItem> {
-    try {
-      const id = this.generateId();
-      const now = new Date().toISOString();
-      
-      const item: ScholarshipItem = {
-        ...scholarship,
-        id,
-        createdAt: now,
-        updatedAt: now,
-        // Convert boolean values to strings for DynamoDB
-        active: scholarship.active ? "true" : "false",
-        essayRequired: scholarship.essayRequired ? "true" : "false",
-        recommendationRequired: scholarship.recommendationRequired ? "true" : "false"
-      };
-
-      const command = new PutItemCommand({
-        TableName: this.tableName,
-        Item: marshall(item)
-      });
-
-      await dynamoDBClient.send(command);
-      return item;
-    } catch (error) {
-      console.error('Error storing scholarship:', error);
-      throw new Error(`Failed to store scholarship: ${error instanceof Error ? error.message : 'Unknown error'}`);
-    }
-  }
-
-  /**
-   * Search scholarships based on criteria
+   * Search scholarships based on criteria using optimized database queries
    * @param criteria - Search criteria
    * @returns Promise with matching scholarships
    */
   async searchScholarships(criteria: SearchCriteria): Promise<ScholarshipItem[]> {
     try {
-      // Choose the best index based on the most specific criteria
-      let indexName = 'ActiveScholarshipsIndex';
-      let keyConditionExpression = 'active = :active';
-      let expressionAttributeValues: Record<string, any> = {
-        ":active": { S: "true" }
-      };
-      let expressionAttributeNames: Record<string, string> = {};
+      const allResults: ScholarshipItem[] = [];
+      const seenIds = new Set<string>();
 
-      // Priority order for index selection:
-      // 1. Education Level (most specific)
-      // 2. Major/Subject Areas
-      // 3. State/Location
-      // 4. Ethnicity (demographics)
-      // 5. Gender
-      // 6. GPA
-      // 7. Deadline
-      // 8. Default to ActiveScholarshipsIndex
-
-      if (criteria.academicLevel) {
-        indexName = 'EducationLevelIndex';
-        keyConditionExpression = '#educationLevel = :educationLevel';
-        expressionAttributeValues[":educationLevel"] = { S: criteria.academicLevel };
-        expressionAttributeNames["#educationLevel"] = "educationLevel";
-      } else if (criteria.subjectAreas && criteria.subjectAreas.length > 0) {
-        indexName = 'MajorIndex';
-        keyConditionExpression = '#major = :major';
-        expressionAttributeValues[":major"] = { S: criteria.subjectAreas[0] }; // Use first subject area
-        expressionAttributeNames["#major"] = "major";
-      } else if (criteria.geographicRestrictions) {
-        indexName = 'LocationIndex';
-        keyConditionExpression = '#state = :state';
-        expressionAttributeValues[":state"] = { S: criteria.geographicRestrictions };
-        expressionAttributeNames["#state"] = "state";
-      } else if (criteria.ethnicity) {
-        indexName = 'DemographicsIndex';
-        keyConditionExpression = '#ethnicity = :ethnicity';
-        expressionAttributeValues[":ethnicity"] = { S: criteria.ethnicity };
-        expressionAttributeNames["#ethnicity"] = "ethnicity";
-      } else if (criteria.gender) {
-        indexName = 'GenderIndex';
-        keyConditionExpression = '#gender = :gender';
-        expressionAttributeValues[":gender"] = { S: criteria.gender };
-        expressionAttributeNames["#gender"] = "gender";
-      } else if (criteria.academicGPA) {
-        indexName = 'GPAIndex';
-        keyConditionExpression = '#minimumGPA = :gpa';
-        expressionAttributeValues[":gpa"] = { N: criteria.academicGPA.toString() };
-        expressionAttributeNames["#minimumGPA"] = "minimumGPA";
-      } 
-
-      // Build filter expressions for non-primary key attributes
-      const filterExpressions: string[] = [];
-
-      // Always filter for active scholarships
-      filterExpressions.push("active = :active");
-      expressionAttributeValues[":active"] = { S: "true" };
-
-      // Handle deadline filters
-      if (criteria.deadlineRange) {
-        if (criteria.deadlineRange.startDate) {
-          filterExpressions.push("#deadline >= :startDate");
-          expressionAttributeValues[":startDate"] = { S: criteria.deadlineRange.startDate };
-          expressionAttributeNames["#deadline"] = "deadline";
-        }
-        if (criteria.deadlineRange.endDate) {
-          filterExpressions.push("#deadline <= :endDate");
-          expressionAttributeValues[":endDate"] = { S: criteria.deadlineRange.endDate };
-          expressionAttributeNames["#deadline"] = "deadline";
+      // Strategy 1: Use specific indexes for exact matches
+      const specificQueries = await this.executeSpecificQueries(criteria);
+      for (const item of specificQueries) {
+        if (!seenIds.has(item.id!)) {
+          seenIds.add(item.id!);
+          allResults.push(item);
         }
       }
 
-      // Filter for additional subject areas (if using MajorIndex)
-      if (criteria.subjectAreas && criteria.subjectAreas.length > 1 && indexName === 'MajorIndex') {
-        const additionalSubjects = criteria.subjectAreas.slice(1).join(', ');
-        filterExpressions.push("contains(#major, :additionalSubjects)");
-        expressionAttributeValues[":additionalSubjects"] = { S: additionalSubjects };
-        expressionAttributeNames["#major"] = "major";
+      // Strategy 2: Use text search for comprehensive matching
+      if (this.hasTextSearchCriteria(criteria)) {
+        const textSearchResults = await this.executeTextSearchQueries(criteria);
+        for (const item of textSearchResults) {
+          if (!seenIds.has(item.id!)) {
+            seenIds.add(item.id!);
+            allResults.push(item);
+          }
+        }
       }
 
-      // Filter for GPA (only when not using GPAIndex)
-      if (criteria.academicGPA && indexName !== 'GPAIndex') {
-        filterExpressions.push("#minimumGPA <= :gpa");
-        expressionAttributeValues[":gpa"] = { N: criteria.academicGPA.toString() };
-        expressionAttributeNames["#minimumGPA"] = "minimumGPA";
+      // Strategy 3: Fallback to active scholarships if no specific criteria
+      if (allResults.length === 0 && !this.hasAnyCriteria(criteria)) {
+        const fallbackResults = await this.getActiveScholarshipsWithFilters(criteria);
+        return fallbackResults;
       }
 
-      // Filter for ethnicity (only when not using DemographicsIndex)
-      if (criteria.ethnicity && indexName !== 'DemographicsIndex') {
-        filterExpressions.push("contains(#ethnicity, :ethnicity)");
-        expressionAttributeValues[":ethnicity"] = { S: criteria.ethnicity };
-        expressionAttributeNames["#ethnicity"] = "ethnicity";
-      }
-
-      // Filter for gender (only when not using GenderIndex)
-      if (criteria.gender && indexName !== 'GenderIndex') {
-        filterExpressions.push("contains(#gender, :gender)");
-        expressionAttributeValues[":gender"] = { S: criteria.gender };
-        expressionAttributeNames["#gender"] = "gender";
-      }
-
-      const command = new QueryCommand({
-        TableName: this.tableName,
-        IndexName: indexName,
-        KeyConditionExpression: keyConditionExpression,
-        FilterExpression: filterExpressions.length > 0 ? filterExpressions.join(" AND ") : undefined,
-        ExpressionAttributeValues: expressionAttributeValues,
-        ExpressionAttributeNames: Object.keys(expressionAttributeNames).length > 0 ? expressionAttributeNames : undefined
-      });
-
-      const response = await dynamoDBClient.send(command);
-      return (response.Items || []).map(item => unmarshall(item) as ScholarshipItem);
+      return allResults;
     } catch (error) {
       console.error('Error searching scholarships:', error);
       throw new Error(`Failed to search scholarships: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
+  }
+
+  /**
+   * Execute specific queries using indexes for exact matches
+   */
+  private async executeSpecificQueries(criteria: SearchCriteria): Promise<ScholarshipItem[]> {
+    const results: ScholarshipItem[] = [];
+
+    // Query by academic level
+    if (criteria.academicLevel) {
+      try {
+        const academicResults = await this.queryByIndex('academic-level-index', {
+          keyCondition: '#academicLevel = :academicLevel',
+          expressionAttributeNames: { '#academicLevel': 'academicLevel' },
+          expressionAttributeValues: { ':academicLevel': { S: criteria.academicLevel } }
+        });
+        results.push(...academicResults);
+      } catch (error) {
+        console.warn('Academic level query failed:', error);
+      }
+    }
+
+    // Query by ethnicity
+    if (criteria.ethnicity) {
+      try {
+        const ethnicityResults = await this.queryByIndex('ethnicity-index', {
+          keyCondition: '#ethnicity = :ethnicity',
+          expressionAttributeNames: { '#ethnicity': 'ethnicity' },
+          expressionAttributeValues: { ':ethnicity': { S: criteria.ethnicity } }
+        });
+        results.push(...ethnicityResults);
+      } catch (error) {
+        console.warn('Ethnicity query failed:', error);
+      }
+    }
+
+    // Query by gender
+    if (criteria.gender) {
+      try {
+        const genderResults = await this.queryByIndex('gender-index', {
+          keyCondition: '#gender = :gender',
+          expressionAttributeNames: { '#gender': 'gender' },
+          expressionAttributeValues: { ':gender': { S: criteria.gender } }
+        });
+        results.push(...genderResults);
+      } catch (error) {
+        console.warn('Gender query failed:', error);
+      }
+    }
+
+    // Query by organization (if available)
+    if (criteria.keywords) {
+      try {
+        const orgResults = await this.queryByIndex('organization-index', {
+          keyCondition: 'contains(#organization, :orgKeyword)',
+          expressionAttributeNames: { '#organization': 'organization' },
+          expressionAttributeValues: { ':orgKeyword': { S: criteria.keywords } }
+        });
+        results.push(...orgResults);
+      } catch (error) {
+        console.warn('Organization query failed:', error);
+      }
+    }
+
+    return results;
+  }
+
+  /**
+   * Execute text search queries using contains() functions
+   */
+  private async executeTextSearchQueries(criteria: SearchCriteria): Promise<ScholarshipItem[]> {
+    const results: ScholarshipItem[] = [];
+    const searchTerms = this.buildSearchTerms(criteria);
+
+    if (searchTerms.length === 0) return results;
+
+    // Use scan with filter for text search (not ideal but necessary for comprehensive search)
+    try {
+      const scanResults = await this.scanWithTextFilters(searchTerms);
+      results.push(...scanResults);
+    } catch (error) {
+      console.warn('Text search scan failed:', error);
+    }
+
+    return results;
+  }
+
+  /**
+   * Scan table with text filters using OR logic
+   */
+  private async scanWithTextFilters(searchTerms: string[]): Promise<ScholarshipItem[]> {
+    const results: ScholarshipItem[] = [];
+    
+    // Build OR filter expression for text search
+    const filterExpressions: string[] = [];
+    const expressionAttributeValues: Record<string, any> = {
+      ':active': { S: 'true' }
+    };
+    const expressionAttributeNames: Record<string, string> = {};
+
+    // Add active filter
+    filterExpressions.push('active = :active');
+
+    // Add text search filters with OR logic
+    searchTerms.forEach((term, index) => {
+      const termKey = `:term${index}`;
+      const descKey = `#desc${index}`;
+      const eligKey = `#elig${index}`;
+      const titleKey = `#title${index}`;
+
+      expressionAttributeValues[termKey] = { S: term };
+      expressionAttributeNames[descKey] = 'description';
+      expressionAttributeNames[eligKey] = 'eligibility';
+      expressionAttributeNames[titleKey] = 'title';
+
+      // Search in description, eligibility, and title
+      filterExpressions.push(
+        `(contains(${descKey}, ${termKey}) OR contains(${eligKey}, ${termKey}) OR contains(${titleKey}, ${termKey}))`
+      );
+    });
+
+    const command = new ScanCommand({
+      TableName: this.tableName,
+      FilterExpression: filterExpressions.join(' AND '),
+      ExpressionAttributeValues: expressionAttributeValues,
+      ExpressionAttributeNames: expressionAttributeNames,
+      Limit: 100 // Limit to prevent excessive scanning
+    });
+
+    const response = await dynamoDBClient.send(command);
+    return (response.Items || []).map(item => unmarshall(item) as ScholarshipItem);
+  }
+
+  /**
+   * Get active scholarships with basic filters
+   */
+  private async getActiveScholarshipsWithFilters(criteria: SearchCriteria): Promise<ScholarshipItem[]> {
+    const filterExpressions: string[] = ['active = :active'];
+    const expressionAttributeValues: Record<string, any> = {
+      ':active': { S: 'true' }
+    };
+    const expressionAttributeNames: Record<string, string> = {};
+
+    // Add amount filters
+    if (criteria.minAmount) {
+      filterExpressions.push('#maxAward >= :minAmount');
+      expressionAttributeValues[':minAmount'] = { N: criteria.minAmount.toString() };
+      expressionAttributeNames['#maxAward'] = 'maxAward';
+    }
+
+    if (criteria.maxAmount) {
+      filterExpressions.push('#minAward <= :maxAmount');
+      expressionAttributeValues[':maxAmount'] = { N: criteria.maxAmount.toString() };
+      expressionAttributeNames['#minAward'] = 'minAward';
+    }
+
+    // Add GPA filter
+    if (criteria.academicGPA) {
+      filterExpressions.push('#academicGPA <= :gpa');
+      expressionAttributeValues[':gpa'] = { N: criteria.academicGPA.toString() };
+      expressionAttributeNames['#academicGPA'] = 'academicGPA';
+    }
+
+    const command = new ScanCommand({
+      TableName: this.tableName,
+      FilterExpression: filterExpressions.join(' AND '),
+      ExpressionAttributeValues: expressionAttributeValues,
+      ExpressionAttributeNames: Object.keys(expressionAttributeNames).length > 0 ? expressionAttributeNames : undefined,
+      Limit: 50
+    });
+
+    const response = await dynamoDBClient.send(command);
+    return (response.Items || []).map(item => unmarshall(item) as ScholarshipItem);
+  }
+
+  /**
+   * Generic query method for different indexes
+   */
+  private async queryByIndex(
+    indexName: string, 
+    params: {
+      keyCondition: string;
+      expressionAttributeNames: Record<string, string>;
+      expressionAttributeValues: Record<string, any>;
+      filterExpression?: string;
+    }
+  ): Promise<ScholarshipItem[]> {
+    const command = new QueryCommand({
+      TableName: this.tableName,
+      IndexName: indexName,
+      KeyConditionExpression: params.keyCondition,
+      FilterExpression: params.filterExpression || 'active = :active',
+      ExpressionAttributeNames: {
+        ...params.expressionAttributeNames,
+        '#active': 'active'
+      },
+      ExpressionAttributeValues: {
+        ...params.expressionAttributeValues,
+        ':active': { S: 'true' }
+      }
+    });
+
+    const response = await dynamoDBClient.send(command);
+    return (response.Items || []).map(item => unmarshall(item) as ScholarshipItem);
+  }
+
+  /**
+   * Check if criteria has text search requirements
+   */
+  private hasTextSearchCriteria(criteria: SearchCriteria): boolean {
+    return !!(
+      (criteria.subjectAreas && criteria.subjectAreas.length > 0) ||
+      (criteria.targetType && criteria.targetType !== 'Both') ||
+      criteria.ethnicity ||
+      criteria.gender ||
+      criteria.keywords
+    );
+  }
+
+  /**
+   * Check if criteria has any search requirements
+   */
+  private hasAnyCriteria(criteria: SearchCriteria): boolean {
+    return !!(
+      criteria.academicLevel ||
+      criteria.ethnicity ||
+      criteria.gender ||
+      criteria.keywords ||
+      (criteria.subjectAreas && criteria.subjectAreas.length > 0) ||
+      (criteria.targetType && criteria.targetType !== 'Both') ||
+      criteria.minAmount ||
+      criteria.maxAmount ||
+      criteria.academicGPA ||
+      criteria.deadlineRange
+    );
+  }
+
+  /**
+   * Build search terms from criteria
+   */
+  private buildSearchTerms(criteria: SearchCriteria): string[] {
+    const terms: string[] = [];
+    
+    // Add subject areas
+    if (criteria.subjectAreas && criteria.subjectAreas.length > 0) {
+      terms.push(...criteria.subjectAreas);
+    }
+    
+    // Add target type (if not 'Both')
+    if (criteria.targetType && criteria.targetType !== 'Both') {
+      terms.push(criteria.targetType);
+    }
+    
+    // Add ethnicity
+    if (criteria.ethnicity) {
+      terms.push(criteria.ethnicity);
+    }
+    
+    // Add gender
+    if (criteria.gender) {
+      terms.push(criteria.gender);
+    }
+    
+    // Add keywords (split into individual words)
+    if (criteria.keywords) {
+      const keywordTerms = criteria.keywords
+        .split(/\s+/)
+        .filter(word => word.length > 0);
+      terms.push(...keywordTerms);
+    }
+    
+    return terms;
   }
 
   /**
