@@ -255,19 +255,26 @@ export class AWSDynamoDBService {
       filterExpression?: string;
     }
   ): Promise<ScholarshipItem[]> {
+    // Build expression attribute names and values
+    const expressionAttributeNames = { ...params.expressionAttributeNames };
+    const expressionAttributeValues = { ...params.expressionAttributeValues };
+    
+    // Use default filter if none provided
+    const filterExpression = params.filterExpression || 'active = :active';
+    
+    // Only add #active if it's used in the filter expression
+    if (filterExpression.includes('active = :active')) {
+      expressionAttributeNames['#active'] = 'active';
+      expressionAttributeValues[':active'] = { S: 'true' };
+    }
+
     const command = new QueryCommand({
       TableName: this.tableName,
       IndexName: indexName,
       KeyConditionExpression: params.keyCondition,
-      FilterExpression: params.filterExpression || 'active = :active',
-      ExpressionAttributeNames: {
-        ...params.expressionAttributeNames,
-        '#active': 'active'
-      },
-      ExpressionAttributeValues: {
-        ...params.expressionAttributeValues,
-        ':active': { S: 'true' }
-      }
+      FilterExpression: filterExpression,
+      ExpressionAttributeNames: expressionAttributeNames,
+      ExpressionAttributeValues: expressionAttributeValues
     });
 
     const response = await dynamoDBClient.send(command);

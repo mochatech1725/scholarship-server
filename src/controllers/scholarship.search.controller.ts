@@ -1,9 +1,9 @@
 import { Request, Response } from 'express';
-import EnhancedAIService, { EnhancedSearchRequest } from '../ai/enhanced-ai.service.js';
+import ScholarshipSearchService from '../services/scholarship-search.service.js';
 import { ScholarshipItem } from '../types/searchPreferences.types.js';
 import { MAX_SCHOLARSHIP_SEARCH_RESULTS, NODE_ENV } from '../utils/constants.js';
 
-const enhancedAIService = new EnhancedAIService();
+const searchService = new ScholarshipSearchService();
 
 /**
  * Convert scholarship results, handling eligibility field conversion
@@ -33,8 +33,8 @@ const convertScholarshipItems = (scholarships: ScholarshipItem[]): ScholarshipIt
 
 export const getScholarshipSources = async (req: Request, res: Response) => {
   try {
-    // If you want to keep this endpoint, you can implement a similar method in EnhancedAIService
-    res.json({ sources: [] });
+    // Return available data sources
+    res.json({ sources: ['dynamodb'] });
   } catch (error) {
     console.error('Error getting scholarship sources:', error);
     res.status(500).json({
@@ -57,12 +57,12 @@ export const findScholarships = async (req: Request, res: Response) => {
       });
     }
 
-    const searchRequest: EnhancedSearchRequest = {
-      searchCriteria,
-      maxResults
-    };
-
-    const result = await enhancedAIService.searchScholarships(searchRequest);
+    const result = await searchService.searchScholarships(searchCriteria, { maxResults });
+    
+    // Debug: Log the sources of scholarships
+    const sources = [...new Set(result.scholarships.map(s => s.source))];
+    console.log('🔍 Scholarship sources found:', sources);
+    console.log('📊 Total scholarships:', result.scholarships.length);
     
     // Convert scholarship results to handle eligibility field conversion
     const convertedScholarships = convertScholarshipItems(result.scholarships);
@@ -71,23 +71,21 @@ export const findScholarships = async (req: Request, res: Response) => {
       success: true,
       data: {
         scholarships: convertedScholarships,
-        totalFound: result.metadata.totalFound,
+        totalFound: result.totalFound,
         searchTimestamp: new Date().toISOString()
       },
       metadata: {
-        sourcesUsed: result.metadata.servicesUsed,
-        aiModel: 'AWS Bedrock',
-        processingTime: `${result.metadata.searchTime}ms`,
-        sources: result.sources,
-        analysis: result.analysis
+        sourcesUsed: ['dynamodb'],
+        processingTime: `${result.searchTime}ms`,
+        filters: result.filters
       }
     });
 
   } catch (error) {
-    console.error('Error in enhanced search:', error);
+    console.error('Error in scholarship search:', error);
     res.status(500).json({
-      message: 'Error in enhanced scholarship search',
-      error: 'ENHANCED_SEARCH_ERROR',
+      message: 'Error in scholarship search',
+      error: 'SEARCH_ERROR',
       details: NODE_ENV === 'development' ? (error instanceof Error ? error.message : String(error)) : undefined
     });
   }

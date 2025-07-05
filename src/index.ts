@@ -11,14 +11,9 @@ import scholarshipSearchRoutes from './routes/scholarship.search.routes.js';
 import authenticateUser from './middleware/auth.middleware.js';
 import { connectDB } from './config/databaseConfig.js';
 import auth0Config from './config/auth0.config.js';
-import { OPENAI_API_KEY, PORT } from './utils/constants.js';
+import { PORT } from './utils/constants.js';
 
 console.log('Starting application...');
-
-// Validate required environment variables
-if (!OPENAI_API_KEY) {
-  throw new Error('OPENAI_API_KEY environment variable is required');
-}
 
 const app: Express = express();
 const port = auth0Config.port;

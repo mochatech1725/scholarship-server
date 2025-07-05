@@ -17,21 +17,12 @@ export const AUTH0_AUDIENCE = process.env.AUTH0_AUDIENCE || '';
 export const AUTH0_CLIENT_ID = process.env.AUTH0_CLIENT_ID || '';
 export const AUTH0_CLIENT_SECRET = process.env.AUTH0_CLIENT_SECRET || '';
 
-// AI API Keys
-export const OPENAI_API_KEY = process.env.OPENAI_API_KEY || '';
-export const DEEPSEEK_API_KEY = process.env.DEEPSEEK_API_KEY || '';
-export const GEMINI_API_KEY = process.env.GEMINI_API_KEY || '';
-export const GOOGLE_API_KEY = process.env.GOOGLE_API_KEY || '';
-export const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY || '';
-
 // App Configuration
 export const APP_SECRET = process.env.APP_SECRET || '';
 export const MAX_SCHOLARSHIP_SEARCH_RESULTS = parseInt(process.env.MAX_SCHOLARSHIP_SEARCH_RESULTS || '25', 10);
-export const OPEN_AI_MODEL = process.env.OPEN_AI_MODEL || 'gpt-4.1 mini';
 
 // AWS Configuration
 export const AWS_REGION = process.env.AWS_REGION || 'us-east-1';
 export const AWS_ACCESS_KEY_ID = process.env.AWS_ACCESS_KEY_ID || '';
 export const AWS_SECRET_ACCESS_KEY = process.env.AWS_SECRET_ACCESS_KEY || '';
-export const AWS_BEDROCK_MODEL_ID = process.env.AWS_BEDROCK_MODEL_ID || 'us.anthropic.claude-3-5-sonnet-20241022-v2:0';
 export const AWS_DYNAMODB_TABLE_NAME = process.env.AWS_DYNAMODB_TABLE_NAME || 'scholarships';
