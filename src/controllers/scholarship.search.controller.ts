@@ -1,10 +1,7 @@
 import { Request, Response } from 'express';
-import dotenv from 'dotenv';
-
 import EnhancedAIService, { EnhancedSearchRequest } from '../ai/enhanced-ai.service.js';
 import { ScholarshipItem } from '../types/searchPreferences.types.js';
-
-dotenv.config();
+import { MAX_SCHOLARSHIP_SEARCH_RESULTS, NODE_ENV } from '../utils/constants.js';
 
 const enhancedAIService = new EnhancedAIService();
 
@@ -51,7 +48,7 @@ export const getScholarshipSources = async (req: Request, res: Response) => {
 
 export const findScholarships = async (req: Request, res: Response) => {
   try {
-    const { searchCriteria, maxResults = parseInt(process.env.MAX_RESULTS || '25')} = req.body;
+    const { searchCriteria, maxResults = MAX_SCHOLARSHIP_SEARCH_RESULTS} = req.body;
 
     if (!searchCriteria || typeof searchCriteria !== 'object') {
       return res.status(400).json({
@@ -91,7 +88,7 @@ export const findScholarships = async (req: Request, res: Response) => {
     res.status(500).json({
       message: 'Error in enhanced scholarship search',
       error: 'ENHANCED_SEARCH_ERROR',
-      details: process.env.NODE_ENV === 'development' ? (error instanceof Error ? error.message : String(error)) : undefined
+      details: NODE_ENV === 'development' ? (error instanceof Error ? error.message : String(error)) : undefined
     });
   }
 };

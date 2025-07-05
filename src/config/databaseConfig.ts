@@ -1,10 +1,5 @@
 import mongoose from 'mongoose';
-import dotenv from 'dotenv';
-
-// Load environment variables
-dotenv.config();
-
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/ScholarshipTracker';
+import { MONGODB_URI } from '../utils/constants.js';
 
 export const connectDB = async (): Promise<void> => {
   try {

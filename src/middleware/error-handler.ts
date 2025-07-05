@@ -2,6 +2,7 @@ import { NextFunction, Request, Response } from "express";
 import { getErrorMessage } from "../utils/helper";
 import CustomError from "../errors/CustomError";
 import { UnauthorizedError } from "express-oauth2-jwt-bearer";
+import { APP_DEBUG } from "../utils/constants.js";
 
 export default function errorHandler(
   error: unknown,
@@ -9,7 +10,7 @@ export default function errorHandler(
   res: Response,
   next: NextFunction,
 ) {
-  if (res.headersSent || process.env.DEBUG === "true") {
+  if (res.headersSent || APP_DEBUG) {
     next(error);
     return;
   }

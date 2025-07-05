@@ -3,7 +3,6 @@ import type { Express, Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
-import dotenv from 'dotenv';
 import applicationRoutes from './routes/application.routes.js';
 import userRoutes from './routes/user.routes.js';
 import recommenderRoutes from './routes/recommender.routes.js';
@@ -12,14 +11,12 @@ import scholarshipSearchRoutes from './routes/scholarship.search.routes.js';
 import authenticateUser from './middleware/auth.middleware.js';
 import { connectDB } from './config/databaseConfig.js';
 import auth0Config from './config/auth0.config.js';
-
-// Load environment variables
-dotenv.config();
+import { OPENAI_API_KEY, PORT } from './utils/constants.js';
 
 console.log('Starting application...');
 
 // Validate required environment variables
-if (!process.env.OPENAI_API_KEY) {
+if (!OPENAI_API_KEY) {
   throw new Error('OPENAI_API_KEY environment variable is required');
 }
 
