@@ -17,15 +17,12 @@ export const getAll = async (req: Request, res: Response) => {
 
 export const getByUserId = async (req: Request, res: Response) => {
   try {
-    console.log('Fetching applications for userId:', req.params.userId);
     
     const applications = await Application.find({ studentId: req.params.userId })
       .populate({
         path: 'recommendations.recommender',
         model: 'Recommender'
       });
-    
-    console.log('Found applications:', applications);
     
     res.json(applications);
   } catch (error) {
