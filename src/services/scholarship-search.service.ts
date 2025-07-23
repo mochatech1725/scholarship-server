@@ -81,14 +81,12 @@ export class ScholarshipSearchService {
       gender: item.gender,
       ethnicity: item.ethnicity,
       academicLevel: item.academicLevel,
-      academicGPA: item.academicGPA,
       essayRequired: Boolean(item.essayRequired),
       recommendationRequired: Boolean(item.recommendationRequired),
       renewable: Boolean(item.renewable),
       geographicRestrictions: item.geographicRestrictions,
       applyUrl: item.applyUrl,
       country: item.country,
-      subjectAreas: item.subjectAreas,
       source: item.source || 'dynamodb',
       url: item.url,
       relevanceScore: 0 // Will be calculated later
@@ -227,17 +225,6 @@ export class ScholarshipSearchService {
         if (description.includes(keyword)) score += 5;
       });
     }
-
-    // Subject area matching
-    if (criteria.subjectAreas && scholarship.subjectAreas) {
-      const scholarshipSubjects = scholarship.subjectAreas.map(s => s.toLowerCase());
-      criteria.subjectAreas.forEach(subject => {
-        if (scholarshipSubjects.some(s => s.includes(subject.toLowerCase()))) {
-          score += 8;
-        }
-      });
-    }
-
     // Academic level matching
     if (criteria.academicLevel && scholarship.academicLevel) {
       if (scholarship.academicLevel.toLowerCase().includes(criteria.academicLevel.toLowerCase())) {
@@ -278,8 +265,6 @@ export class ScholarshipSearchService {
     if (scholarship.description) textParts.push(scholarship.description);
     if (scholarship.title) textParts.push(scholarship.title);
     if (scholarship.organization) textParts.push(scholarship.organization);
-    if (scholarship.subjectAreas) textParts.push(scholarship.subjectAreas.join(' '));
-    if (scholarship.major) textParts.push(scholarship.major);
     
     return textParts.join(' ');
   }
@@ -334,7 +319,6 @@ export class ScholarshipSearchService {
     if (criteria.gender) filters.push(`Gender: ${criteria.gender}`);
     if (criteria.ethnicity) filters.push(`Ethnicity: ${criteria.ethnicity}`);
     if (criteria.geographicRestrictions) filters.push(`Location: ${criteria.geographicRestrictions}`);
-    if (criteria.academicGPA) filters.push(`Min GPA: ${criteria.academicGPA}`);
     
     return filters;
   }

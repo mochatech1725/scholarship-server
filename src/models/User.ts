@@ -21,7 +21,6 @@ export interface IProfile {
       targetType: TargetType;
       gender: Gender;
       ethnicity: Ethnicity;
-      academicGPA: number;
       essayRequired: boolean;
       recommendationRequired: boolean;
     };
@@ -59,12 +58,6 @@ const ProfileSchema: Schema = new Schema({
       ethnicity: {
         type: String,
         enum: ethnicityOptions,
-      },
-      academicGPA: {
-        type: Number,
-        min: 0,
-        max: 4.0,
-        default: 0
       },
       essayRequired: {
         type: Boolean,

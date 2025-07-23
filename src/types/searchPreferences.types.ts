@@ -14,7 +14,6 @@ export interface SearchCriteria {
   gender: string | null
   ethnicity: string | null
   geographicRestrictions: string | null
-  academicGPA: number | null
   essayRequired: boolean | null
   recommendationRequired: boolean | null
   minAmount?: number
@@ -38,6 +37,7 @@ export interface ScholarshipItem {
   title: string;
   description: string;
   organization?: string;
+  targetType?: string;
   minAward?: number;
   maxAward?: number;
   deadline?: string;
@@ -45,22 +45,15 @@ export interface ScholarshipItem {
   gender?: string;
   ethnicity?: string;
   academicLevel?: string;
-  academicGPA?: number;
   essayRequired?: boolean;
   recommendationRequired?: boolean;
   renewable?: boolean;
+  country?: string;
   geographicRestrictions?: string;
   applyUrl?: string;
-  country?: string;
-  subjectAreas?: string[];
-  source: string;
   url?: string;
+  source: string;
   relevanceScore?: number;
-  // Additional fields
-  targetType?: string;
-  major?: string;
-  state?: string;
-  minimumGPA?: number;
 }
 
 // Interface for DynamoDB storage (with string boolean values)
