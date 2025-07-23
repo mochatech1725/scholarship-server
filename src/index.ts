@@ -105,7 +105,7 @@ app.use((req: Request, res: Response) => {
 const startServer = async () => {
   try {
     // Initialize Knex with AWS Secrets Manager
-    const secretArn = 'arn:aws:secretsmanager:us-east-1:703290033396:secret:scholarships-dev-jDj86a';
+    const secretArn = process.env.AWS_SECRET_ARN || '';
     await initKnex(secretArn);
     
     // Initialize scholarship search controller

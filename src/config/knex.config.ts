@@ -14,11 +14,11 @@ export async function initKnex(secretArn: string): Promise<Knex> {
     knexInstance = knex({
       client: 'mysql2',
       connection: {
-        host: secret.host,
+        host: process.env.DB_HOST || secret.host, // Use local tunnel if set
         user: secret.username,
         password: secret.password,
         database: secret.dbname,
-        port: secret.port ? Number(secret.port) : 3306,
+        port: process.env.DB_PORT ? Number(process.env.DB_PORT) : (secret.port ? Number(secret.port) : 3306), // Use local tunnel port if set
         ssl: secret.ssl || undefined,
       },
       pool: { 

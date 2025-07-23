@@ -1,0 +1,1 @@
+ssh -i ~/.ssh/bastion-key.pem -L 3307:scholarshipscraper-dev-mysqlinstance216dd474-5wsgcciykpks.cynq0w8k0976.us-east-1.rds.amazonaws.com:3306 ec2-user@35.168.23.3
