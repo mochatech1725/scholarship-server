@@ -4,7 +4,7 @@ import { IApplication } from '../types/application.types.js';
 import { IRecommendation } from '../types/recommendation.types.js';
 import { IEssay } from '../types/essay.types.js';
 
-// Helper function to populate application with related data
+
 async function populateApplicationWithRelatedData(application: IApplication): Promise<IApplication> {
   const knex = getKnex();
   
@@ -25,7 +25,6 @@ async function populateApplicationWithRelatedData(application: IApplication): Pr
   };
 }
 
-// Helper function to populate multiple applications with related data
 async function populateApplicationsWithRelatedData(applications: IApplication[]): Promise<IApplication[]> {
   return Promise.all(applications.map(app => populateApplicationWithRelatedData(app)));
 }

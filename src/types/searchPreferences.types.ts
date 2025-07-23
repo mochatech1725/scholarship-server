@@ -1,5 +1,3 @@
-// --- Scholarship Types (merged from scholarship.types.ts) ---
-// Interface for scholarship website data
 export interface ScholarshipWebsite {
   name: string;
   url: string;
@@ -77,26 +75,6 @@ export interface SearchResponse {
     sourcesUsed: string[];
     aiModel: string;
     processingTime: string;
-  };
-}
-
-export interface HealthResponse {
-  status: 'healthy' | 'unhealthy';
-  message: string;
-  service: string;
-  model?: string;
-  timestamp?: string;
-  error?: any;
-}
-
-export interface SourcesResponse {
-  success: boolean;
-  data: {
-    sources: Array<{
-      name: string;
-      url: string;
-    }>;
-    totalSources: number;
   };
 }
 
