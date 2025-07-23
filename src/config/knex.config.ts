@@ -1,5 +1,15 @@
 import knex, { Knex } from 'knex';
 import { getSecret } from './secrets.config.js';
+import {
+  KNEX_MYSQL_POOL_MIN,
+  KNEX_MYSQL_POOL_MAX,
+  KNEX_MYSQL_POOL_ACQUIRE_TIMEOUT,
+  KNEX_MYSQL_POOL_CREATE_TIMEOUT,
+  KNEX_MYSQL_POOL_DESTROY_TIMEOUT,
+  KNEX_MYSQL_POOL_IDLE_TIMEOUT,
+  KNEX_MYSQL_POOL_REAP_INTERVAL,
+  KNEX_MYSQL_POOL_CREATE_RETRY_INTERVAL
+} from '../utils/constants.js';
 
 let knexInstance: Knex | null = null;
 
@@ -22,14 +32,14 @@ export async function initKnex(secretArn: string): Promise<Knex> {
         ssl: secret.ssl || undefined,
       },
       pool: { 
-        min: 0, 
-        max: 10,
-        acquireTimeoutMillis: 60000,
-        createTimeoutMillis: 30000,
-        destroyTimeoutMillis: 5000,
-        idleTimeoutMillis: 30000,
-        reapIntervalMillis: 1000,
-        createRetryIntervalMillis: 100,
+        min: KNEX_MYSQL_POOL_MIN, 
+        max: KNEX_MYSQL_POOL_MAX,
+        acquireTimeoutMillis: KNEX_MYSQL_POOL_ACQUIRE_TIMEOUT,
+        createTimeoutMillis: KNEX_MYSQL_POOL_CREATE_TIMEOUT,
+        destroyTimeoutMillis: KNEX_MYSQL_POOL_DESTROY_TIMEOUT,
+        idleTimeoutMillis: KNEX_MYSQL_POOL_IDLE_TIMEOUT,
+        reapIntervalMillis: KNEX_MYSQL_POOL_REAP_INTERVAL,
+        createRetryIntervalMillis: KNEX_MYSQL_POOL_CREATE_RETRY_INTERVAL,
       },
     });
 

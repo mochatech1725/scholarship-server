@@ -25,3 +25,13 @@ export const MAX_SCHOLARSHIP_SEARCH_RESULTS = parseInt(process.env.MAX_SCHOLARSH
 export const AWS_REGION = process.env.AWS_REGION || 'us-east-1';
 export const AWS_ACCESS_KEY_ID = process.env.AWS_ACCESS_KEY_ID || '';
 export const AWS_SECRET_ACCESS_KEY = process.env.AWS_SECRET_ACCESS_KEY || '';
+
+// Knex MySQL Pool Configuration
+export const KNEX_MYSQL_POOL_MIN = parseInt(process.env.KNEX_MYSQL_POOL_MIN || '0', 10);
+export const KNEX_MYSQL_POOL_MAX = parseInt(process.env.KNEX_MYSQL_POOL_MAX || '10', 10);
+export const KNEX_MYSQL_POOL_ACQUIRE_TIMEOUT = parseInt(process.env.KNEX_MYSQL_POOL_ACQUIRE_TIMEOUT || '60000', 10);
+export const KNEX_MYSQL_POOL_CREATE_TIMEOUT = parseInt(process.env.KNEX_MYSQL_POOL_CREATE_TIMEOUT || '30000', 10);
+export const KNEX_MYSQL_POOL_DESTROY_TIMEOUT = parseInt(process.env.KNEX_MYSQL_POOL_DESTROY_TIMEOUT || '5000', 10);
+export const KNEX_MYSQL_POOL_IDLE_TIMEOUT = parseInt(process.env.KNEX_MYSQL_POOL_IDLE_TIMEOUT || '30000', 10);
+export const KNEX_MYSQL_POOL_REAP_INTERVAL = parseInt(process.env.KNEX_MYSQL_POOL_REAP_INTERVAL || '1000', 10);
+export const KNEX_MYSQL_POOL_CREATE_RETRY_INTERVAL = parseInt(process.env.KNEX_MYSQL_POOL_CREATE_RETRY_INTERVAL || '100', 10);
