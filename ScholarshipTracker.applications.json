@@ -1,0 +1,139 @@
+[{
+  "_id": {
+    "$oid": "507f1f77bcf86cd799439015"
+  },
+  "studentId": "auth0|6844d51eecdb753254ed6d53",
+  "scholarshipName": "Test Scholarship",
+  "targetType": "Both",
+  "company": "Test Company",
+  "companyWebsite": "https://testcompany.com",
+  "applicationLink": "https://testcompany.com/apply",
+  "amount": 6000,
+  "platform": "Common App",
+  "theme": "Leadership",
+  "openDate": {
+    "$date": "2024-01-01T00:00:00.000Z"
+  },
+  "dueDate": {
+    "$date": "2024-05-01T00:00:00.000Z"
+  },
+  "submissionDate": {
+    "$date": "2024-04-15T00:00:00.000Z"
+  },
+  "status": "In Progress",
+  "currentAction": "Waiting for recommendations",
+  "renewable": true,
+  "requirements": "Woman, Community Service, STEM",
+  "recommendations": [
+    {
+      "recommender": {
+        "$oid": "507f1f77bcf86cd799439011"
+      },
+      "status": "Pending",
+      "submissionMethod": "StudentUpload",
+      "requestDate": {
+        "$date": "2024-03-01T00:00:00.000Z"
+      },
+      "dueDate": {
+        "$date": "2024-04-01T00:00:00.000Z"
+      },
+      "submissionDate": null,
+      "_id": {
+        "$oid": "6861b3fa8209d1cf5e5264bb"
+      },
+      "createdAt": {
+        "$date": "2025-07-02T17:28:50.752Z"
+      },
+      "updatedAt": {
+        "$date": "2025-07-02T17:28:50.752Z"
+      }
+    },
+    {
+      "recommender": {
+        "$oid": "507f1f77bcf86cd799439012"
+      },
+      "status": "Submitted",
+      "submissionMethod": "DirectEmail",
+      "requestDate": {
+        "$date": "2024-03-01T00:00:00.000Z"
+      },
+      "dueDate": {
+        "$date": "2024-04-01T00:00:00.000Z"
+      },
+      "submissionDate": {
+        "$date": "2024-03-15T00:00:00.000Z"
+      },
+      "_id": {
+        "$oid": "685ed3aba8696f04f5832afa"
+      },
+      "createdAt": {
+        "$date": "2025-07-02T17:28:50.752Z"
+      },
+      "updatedAt": {
+        "$date": "2025-07-02T17:28:50.752Z"
+      }
+    },
+    {
+      "recommender": {
+        "$oid": "507f1f77bcf86cd799439013"
+      },
+      "status": "Submitted",
+      "submissionMethod": "DirectEmail",
+      "requestDate": {
+        "$date": "2024-03-01T00:00:00.000Z"
+      },
+      "dueDate": {
+        "$date": "2024-04-01T00:00:00.000Z"
+      },
+      "submissionDate": null,
+      "_id": {
+        "$oid": "685ed3aba8696f04f5832afb"
+      },
+      "createdAt": {
+        "$date": "2025-07-02T17:28:50.752Z"
+      },
+      "updatedAt": {
+        "$date": "2025-07-02T17:28:50.752Z"
+      }
+    }
+  ],
+  "essays": [
+    {
+      "essayLink": "https://docs.google.com/document/d/essay1",
+      "count": 500,
+      "units": "words",
+      "theme": "Leadership Experience",
+      "_id": {
+        "$oid": "685ed3aba8696f04f5832afc"
+      },
+      "createdAt": {
+        "$date": "2025-07-02T17:28:50.752Z"
+      },
+      "updatedAt": {
+        "$date": "2025-07-02T17:28:50.752Z"
+      }
+    },
+    {
+      "essayLink": "https://docs.google.com/document/d/essay2",
+      "count": 1000,
+      "units": "characters",
+      "theme": "Personal Statement",
+      "_id": {
+        "$oid": "685ed3aba8696f04f5832afd"
+      },
+      "createdAt": {
+        "$date": "2025-07-02T17:28:50.752Z"
+      },
+      "updatedAt": {
+        "$date": "2025-07-02T17:28:50.752Z"
+      }
+    }
+  ],
+  "createdAt": {
+    "$date": "2024-01-01T00:00:00.000Z"
+  },
+  "updatedAt": {
+    "$date": "2025-07-02T17:28:50.752Z"
+  },
+  "renewableTerms": "3.5gpa"
+}]

@@ -1,0 +1,29 @@
+[{
+  "_id": {
+    "$oid": "680582a964017a667b7afd38"
+  },
+  "__v": 0,
+  "userId": "auth0|6844d51eecdb753254ed6d53",
+  "profile": {
+    "userPreferences": {
+      "searchPreferences": {
+        "targetType": "Merit",
+        "subjectAreas": [
+          "STEM"
+        ],
+        "gender": "Female",
+        "ethnicity": "Black/African American",
+        "academicGPA": 0,
+        "essayRequired": false,
+        "recommendationRequired": false,
+        "academicLevel": "Undergraduate"
+      }
+    },
+    "_id": {
+      "$oid": "6861ff8b81e9aa165eccf4a0"
+    }
+  },
+  "updatedAt": {
+    "$date": "2025-06-30T03:07:55.187Z"
+  }
+}]

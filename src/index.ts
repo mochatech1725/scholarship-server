@@ -9,7 +9,8 @@ import recommenderRoutes from './routes/recommender.routes.js';
 import authRoutes from './routes/auth.routes.js';
 import scholarshipSearchRoutes from './routes/scholarship.search.routes.js';
 import authenticateUser from './middleware/auth.middleware.js';
-import { connectDB } from './config/databaseConfig.js';
+import { initKnex } from './config/knex.config.js';
+import { initScholarshipSearchController } from './controllers/scholarship.search.controller.js';
 import auth0Config from './config/auth0.config.js';
 import { PORT } from './utils/constants.js';
 
@@ -81,10 +82,9 @@ app.get('/', (req: Request, res: Response) => {
   res.json({ message: 'Welcome to Scholarship Server API with Auth0 Integration' });
 });
 
-
 // 404 handler - ensure JSON response
 app.use((req: Request, res: Response) => {
-  res.status(404).json({ 
+  res.json({ 
     message: 'Route not found',
     path: req.path,
     method: req.method,
@@ -104,8 +104,12 @@ app.use((req: Request, res: Response) => {
 // Start server function
 const startServer = async () => {
   try {
-    // Connect to MongoDB
-    await connectDB();
+    // Initialize Knex with AWS Secrets Manager
+    const secretArn = 'arn:aws:secretsmanager:us-east-1:703290033396:secret:scholarships-dev-jDj86a';
+    await initKnex(secretArn);
+    
+    // Initialize scholarship search controller
+    await initScholarshipSearchController(secretArn);
     
     // Start server
     app.listen(port, () => {
@@ -113,6 +117,7 @@ const startServer = async () => {
       console.log(`Environment: ${auth0Config.env}`);
       console.log(`Auth0 Integration: ${auth0Config.audience ? 'Enabled' : 'Disabled'}`);
       console.log(`CORS Origins: ${corsOptions.origin.join(', ')}`);
+      console.log('✅ MySQL connection established via Knex');
     });
   } catch (error) {
     console.error('Failed to start server:', error);

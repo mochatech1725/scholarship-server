@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
-import User from '../models/User.js';
+import { getKnex } from '../config/knex.config.js';
+import { User } from '../types/user.types.js';
 
 export const login = async (req: Request, res: Response) => {
   console.log('login called');
@@ -13,8 +14,10 @@ export const login = async (req: Request, res: Response) => {
       return res.status(401).json({ message: 'User not authenticated' });
     }
 
+    const knex = getKnex();
+    
     // Find user in our database based on Auth0 sub
-    const user = await User.findOne({ userId: auth0User.sub });
+    const user = await knex<User>('users').where('auth_user_id', auth0User.sub).first();
 
     if (!user) {
       console.log('No user found for auth0Id:', auth0User.sub, '- returning 404');
@@ -24,11 +27,11 @@ export const login = async (req: Request, res: Response) => {
       });
     }
 
-    console.log('Existing user found:', user._id);
+    console.log('Existing user found:', user.user_id);
 
     const response = {
       user: {
-        ...user.toObject()
+        ...user
       },
       auth0Profile: auth0User
     };
@@ -66,8 +69,10 @@ export const createUser = async (req: Request, res: Response) => {
       return res.status(401).json({ message: 'User not authenticated' });
     }
 
+    const knex = getKnex();
+
     // Check if user already exists
-    const existingUser = await User.findOne({ userId: auth0User.sub });
+    const existingUser = await knex<User>('users').where('auth_user_id', auth0User.sub).first();
     if (existingUser) {
       return res.status(409).json({ message: 'User already exists' });
     }
@@ -75,23 +80,42 @@ export const createUser = async (req: Request, res: Response) => {
     // Extract name parts safely
     const auth0Name = typeof auth0User.name === 'string' ? auth0User.name : '';
     const nameParts = auth0Name.split(' ');
-    const firstName = auth0User.given_name || nameParts[0] || '';
-    const lastName = auth0User.family_name || nameParts.slice(1).join(' ') || '';
+    const firstName = auth0User.given_name as string || nameParts[0] || '';
+    const lastName = auth0User.family_name as string || nameParts.slice(1).join(' ') || '';
 
     // Create new user from Auth0 profile
-    const newUser = new User({
-      userId: auth0User.sub,
-      firstName,
-      lastName,
-      emailAddress: auth0User.email || '',
-      profile: req.body.profile || {} // Allow optional profile data
-    });
+    const userData = {
+      auth_user_id: auth0User.sub as string,
+      first_name: firstName,
+      last_name: lastName,
+      email_address: auth0User.email as string || ''
+    };
 
-    const savedUser = await newUser.save();
+    const [savedUser] = await knex<User>('users')
+      .insert(userData)
+      .returning('*');
+
+    // If profile data is provided, create search preferences
+    if (req.body.profile?.userPreferences?.searchPreferences) {
+      const searchPrefs = req.body.profile.userPreferences.searchPreferences;
+      const searchPreferencesData = {
+        user_id: savedUser.user_id,
+        target_type: searchPrefs.targetType,
+        subject_areas: searchPrefs.subjectAreas ? JSON.stringify(searchPrefs.subjectAreas) : undefined,
+        gender: searchPrefs.gender,
+        ethnicity: searchPrefs.ethnicity,
+        academic_gpa: searchPrefs.academicGPA,
+        essay_required: searchPrefs.essayRequired,
+        recommendation_required: searchPrefs.recommendationRequired,
+        academic_level: searchPrefs.academicLevel
+      };
+
+      await knex('user_search_preferences').insert(searchPreferencesData);
+    }
     
     res.status(201).json({
       message: 'User created successfully',
-      user: savedUser.toObject()
+      user: savedUser
     });
   } catch (error) {
     console.error('Error creating user:', error);

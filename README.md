@@ -1,6 +1,6 @@
 # Scholarship Server
 
-A comprehensive scholarship management server built with Express.js, TypeScript, and MongoDB, featuring Auth0 integration and AI-powered scholarship search capabilities.
+A comprehensive scholarship management server built with Express.js, TypeScript, and AWS RDS MySQL, featuring Auth0 integration and AI-powered scholarship search capabilities.
 
 ## Features
 
@@ -10,8 +10,16 @@ A comprehensive scholarship management server built with Express.js, TypeScript,
 - **AI-Powered Scholarship Search**: Intelligent search using OpenAI and RAG (Retrieval-Augmented Generation)
 - **RESTful API**: Clean, well-documented API endpoints
 - **TypeScript**: Full type safety and better development experience
-- **MongoDB**: Scalable NoSQL database
+- **AWS RDS MySQL**: Scalable relational database for scholarships (via Knex)
 - **Security**: Helmet, CORS
+
+## Database & Secrets
+
+- **Scholarship data is stored in AWS RDS MySQL.**
+- **Knex** is used as the query builder for all scholarship-related queries.
+- **Database credentials are securely managed via AWS Secrets Manager.**
+  - See [`src/config/secrets.config.ts`](src/config/secrets.config.ts) for the utility to read secrets.
+  - The secret should be a JSON object with at least: `host`, `username`, `password`, `dbname` (and optionally `port`, `ssl`).
 
 ## AI Scholarship Search Feature
 
@@ -22,11 +30,12 @@ The application includes an advanced AI-powered scholarship search system that u
 - **Web scraping capabilities** (with rate limiting and respectful practices)
 - **Semantic search** based on user keywords
 - **Relevance scoring** for optimal results
+- **MySQL/Knex** for fast, flexible scholarship filtering
 
 ### Scholarship Search Endpoints
 
 #### POST `/api/scholarships/find`
-Search for scholarships using AI-powered analysis.
+Search for scholarships using AI-powered analysis and MySQL filtering.
 
 **Request Body:**
 ```json
@@ -88,7 +97,7 @@ The AI search system integrates with the following scholarship websites:
 1. **Keyword Processing**: User keywords are analyzed for semantic meaning
 2. **Data Retrieval**: Scholarship data is gathered from multiple sources
 3. **AI Analysis**: OpenAI GPT-3.5-turbo analyzes and ranks scholarships by relevance
-4. **Filtering**: Results are filtered based on amount, deadlines, and other criteria
+4. **Filtering**: Results are filtered based on amount, deadlines, and other criteria using MySQL/Knex
 5. **Ranking**: Scholarships are ranked by relevance score (0.0 to 1.0)
 
 ## Installation
@@ -116,8 +125,8 @@ NODE_ENV=development
 PORT=3000
 APP_DEBUG=true
 
-# MongoDB Configuration
-MONGODB_URI=mongodb://localhost:27017/scholarship-server
+# MySQL/AWS RDS Configuration (via AWS Secrets Manager)
+# No direct DB credentials here; see AWS Secrets Manager section
 
 # CORS Configuration
 CORS_ORIGIN=http://localhost:3000
@@ -185,9 +194,10 @@ npm run dev
 src/
 ├── controllers/          # Route controllers
 ├── routes/              # API routes
-├── models/              # MongoDB models
+├── models/              # MongoDB models (user/applications only)
 ├── middleware/          # Custom middleware
-├── config/              # Configuration files
+├── config/              # Configuration files (including secrets.config.ts)
+├── services/            # Service logic (including aws.db.service.ts)
 ├── types/               # TypeScript type definitions
 ├── database/            # Database connection and setup
 ├── errors/              # Error handling
@@ -263,7 +273,6 @@ const response = await fetch('/api/search', {
       keywords: "computer science",
       educationLevel: "undergraduate",
       subjectAreas: ["Computer Science", "Technology"],
-      academicGPA: 3.5
     },
     maxResults: 10
   })

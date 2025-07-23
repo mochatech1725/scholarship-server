@@ -1,11 +1,11 @@
-import AWSDynamoDBService from './aws-dynamodb.service.js';
+import { SearchService } from './aws.db.service.js';
 import { ScholarshipItem, SearchCriteria, SearchOptions } from '../types/searchPreferences.types.js';
 
 export class ScholarshipSearchService {
-  private dynamoDBService: AWSDynamoDBService;
+  private searchService: SearchService;
 
-  constructor() {
-    this.dynamoDBService = new AWSDynamoDBService();
+  constructor(searchService: SearchService) {
+    this.searchService = searchService;
   }
 
   /**
@@ -24,32 +24,28 @@ export class ScholarshipSearchService {
     };
   }> {
     const startTime = Date.now();
-    
     try {
-      // Get raw results from DynamoDB
-      const dynamoResults = await this.dynamoDBService.searchScholarships(criteria);
-      
-      // Convert to ScholarshipItem format
-      let scholarships = this.convertDynamoToResults(dynamoResults);
-      
-      // Apply additional filters
+      // Get results from MySQL via Knex
+      let scholarships = await this.searchService.searchScholarships(criteria);
+
+      // Apply additional filters (e.g., expired deadlines)
       scholarships = this.applyFilters(scholarships, criteria, options);
-      
+
       // Sort results
       scholarships = this.sortScholarships(scholarships, options.sortBy || 'relevance', options.sortOrder || 'desc');
-      
+
       // Calculate relevance scores
       scholarships = scholarships.map(scholarship => ({
         ...scholarship,
         relevanceScore: this.calculateRelevanceScore(scholarship, criteria)
       }));
-      
+
       // Limit results
       const maxResults = options.maxResults || 25;
       const finalResults = scholarships.slice(0, maxResults);
-      
+
       const searchTime = Date.now() - startTime;
-      
+
       return {
         scholarships: finalResults,
         totalFound: finalResults.length,
@@ -59,51 +55,10 @@ export class ScholarshipSearchService {
           available: this.getAvailableFilters(scholarships)
         }
       };
-      
     } catch (error) {
       console.error('Scholarship search failed:', error);
       throw new Error(`Search failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
-  }
-
-  /**
-   * Convert DynamoDB items to scholarship results with new schema
-   */
-  private convertDynamoToResults(items: ScholarshipItem[]): ScholarshipItem[] {
-    return items.map(item => ({
-      title: item.title,
-      description: item.description,
-      organization: item.organization,
-      minAward: this.parseAmount(item.minAward),
-      maxAward: this.parseAmount(item.maxAward),
-      deadline: item.deadline,
-      eligibility: item.eligibility,
-      gender: item.gender,
-      ethnicity: item.ethnicity,
-      academicLevel: item.academicLevel,
-      essayRequired: Boolean(item.essayRequired),
-      recommendationRequired: Boolean(item.recommendationRequired),
-      renewable: Boolean(item.renewable),
-      geographicRestrictions: item.geographicRestrictions,
-      applyUrl: item.applyUrl,
-      country: item.country,
-      source: item.source || 'dynamodb',
-      url: item.url,
-      relevanceScore: 0 // Will be calculated later
-    }));
-  }
-
-  /**
-   * Parse amount string to number
-   */
-  private parseAmount(amount: string | number | undefined): number | undefined {
-    if (typeof amount === 'number') return amount;
-    if (!amount) return undefined;
-    
-    // Remove currency symbols and commas, extract numbers
-    const cleaned = amount.toString().replace(/[$,€£¥]/g, '').replace(/,/g, '');
-    const match = cleaned.match(/(\d+(?:\.\d+)?)/);
-    return match ? parseFloat(match[1]) : undefined;
   }
 
   /**
@@ -352,11 +307,10 @@ export class ScholarshipSearchService {
    */
   async getScholarshipById(id: string): Promise<ScholarshipItem | null> {
     try {
-      const item = await this.dynamoDBService.getScholarshipById(id);
+      const item = await this.searchService.getScholarshipById(id);
       if (!item) return null;
       
-      const results = this.convertDynamoToResults([item]);
-      return results[0];
+      return item;
     } catch (error) {
       console.error('Error getting scholarship by ID:', error);
       return null;

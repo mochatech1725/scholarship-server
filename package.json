@@ -1,7 +1,7 @@
 {
   "name": "scholarship-server",
   "version": "1.0.0",
-  "description": "Scholarship server application using Express and MongoDB with Auth0 integration",
+  "description": "Scholarship server application using Express and MySQL with Auth0 integration",
   "main": "dist/index.js",
   "type": "module",
   "scripts": {
@@ -9,12 +9,16 @@
     "dev": "nodemon",
     "build": "tsc",
     "test": "jest",
-    "token": "node scripts/get-auth0-token.js"
+    "token": "node scripts/get-auth0-token.js",
+    "migrate": "ts-node scripts/migrate-data.ts",
+    "migrate:dry-run": "ts-node scripts/migrate-data.ts --dry-run",
+    "migrate:custom": "ts-node scripts/migrate-data.ts --data-dir=./custom-data"
   },
   "dependencies": {
     "@aws-sdk/client-bedrock-runtime": "^3.840.0",
     "@aws-sdk/client-comprehend": "^3.840.0",
     "@aws-sdk/client-dynamodb": "^3.840.0",
+    "@aws-sdk/client-secrets-manager": "^3.848.0",
     "@aws-sdk/util-dynamodb": "^3.840.0",
     "axios": "^1.10.0",
     "cheerio": "^1.1.0",
@@ -23,8 +27,10 @@
     "express": "^4.18.2",
     "express-oauth2-jwt-bearer": "^1.6.1",
     "helmet": "^7.1.0",
-    "mongoose": "^8.1.0",
+    "knex": "^3.1.0",
+
     "morgan": "^1.10.0",
+    "mysql2": "^3.14.2",
     "openai": "^5.6.0",
     "puppeteer": "^24.11.2"
   },
@@ -32,7 +38,7 @@
     "@types/cheerio": "^0.22.35",
     "@types/cors": "^2.8.18",
     "@types/express": "^4.17.22",
-    "@types/mongoose": "^5.11.96",
+
     "@types/morgan": "^1.9.10",
     "@types/node": "^20.17.52",
     "nodemon": "^3.0.2",

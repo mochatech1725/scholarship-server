@@ -1,30 +1,48 @@
 import { Request, Response } from 'express';
-import Recommender from '../models/Recommender.js';
+import { getKnex } from '../config/knex.config.js';
+import { Recommender } from '../types/recommender.types.js';
 
 export const getAll = async (req: Request, res: Response) => {
   try {
-    const recommenders = await Recommender.find();
+    const knex = getKnex();
+    const recommenders = await knex<Recommender>('recommenders')
+      .select('*')
+      .orderBy('created_at', 'desc');
+    
     res.json(recommenders);
   } catch (error) {
+    console.error('Error fetching recommenders:', error);
     res.status(500).json({ message: 'Error fetching recommenders', error });
   }
 };
 
 export const getById = async (req: Request, res: Response) => {
   try {
-    const recommender = await Recommender.findById(req.params.id);
+    const knex = getKnex();
+    const recommender = await knex<Recommender>('recommenders')
+      .select('*')
+      .where({ recommender_id: parseInt(req.params.id) })
+      .first();
+    
     if (!recommender) {
       return res.status(404).json({ message: 'Recommender not found' });
     }
+    
     res.json(recommender);
   } catch (error) {
+    console.error('Error fetching recommender:', error);
     res.status(500).json({ message: 'Error fetching recommender', error });
   }
 };
 
 export const getByUserId = async (req: Request, res: Response) => {
   try {
-    const recommenders = await Recommender.find({ studentId: req.params.userId });
+    const knex = getKnex();
+    const recommenders = await knex<Recommender>('recommenders')
+      .select('*')
+      .where({ student_id: req.params.userId })
+      .orderBy('created_at', 'desc');
+    
     res.json(recommenders || []);
   } catch (error) {
     console.error('Error in getByUserId:', error);
@@ -34,38 +52,62 @@ export const getByUserId = async (req: Request, res: Response) => {
 
 export const create = async (req: Request, res: Response) => {
   try {
-    const recommender = new Recommender(req.body);
-    const savedRecommender = await recommender.save();
-    res.status(201).json(savedRecommender);
+    const knex = getKnex();
+    const [recommenderId] = await knex<Recommender>('recommenders')
+      .insert(req.body);
+    
+    const newRecommender = await knex<Recommender>('recommenders')
+      .select('*')
+      .where({ recommender_id: recommenderId })
+      .first();
+    
+    res.status(201).json(newRecommender);
   } catch (error) {
+    console.error('Error creating recommender:', error);
     res.status(400).json({ message: 'Error creating recommender', error });
   }
 };
 
 export const update = async (req: Request, res: Response) => {
   try {
-    const recommender = await Recommender.findByIdAndUpdate(
-      req.params.id,
-      req.body,
-      { new: true, runValidators: true }
-    );
-    if (!recommender) {
+    const knex = getKnex();
+    const updatedCount = await knex<Recommender>('recommenders')
+      .where({ recommender_id: parseInt(req.params.id) })
+      .update({
+        ...req.body,
+        updated_at: new Date()
+      });
+    
+    if (updatedCount === 0) {
       return res.status(404).json({ message: 'Recommender not found' });
     }
-    res.json(recommender);
+    
+    const updatedRecommender = await knex<Recommender>('recommenders')
+      .select('*')
+      .where({ recommender_id: parseInt(req.params.id) })
+      .first();
+    
+    res.json(updatedRecommender);
   } catch (error) {
+    console.error('Error updating recommender:', error);
     res.status(400).json({ message: 'Error updating recommender', error });
   }
 };
 
 export const deleteRecommender = async (req: Request, res: Response) => {
   try {
-    const recommender = await Recommender.findByIdAndDelete(req.params.id);
-    if (!recommender) {
+    const knex = getKnex();
+    const deletedCount = await knex<Recommender>('recommenders')
+      .where({ recommender_id: parseInt(req.params.id) })
+      .del();
+    
+    if (deletedCount === 0) {
       return res.status(404).json({ message: 'Recommender not found' });
     }
+    
     res.json({ message: 'Recommender deleted successfully' });
   } catch (error) {
+    console.error('Error deleting recommender:', error);
     res.status(500).json({ message: 'Error deleting recommender', error });
   }
 };
