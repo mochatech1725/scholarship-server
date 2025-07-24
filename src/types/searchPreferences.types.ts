@@ -1,9 +1,3 @@
-export interface ScholarshipWebsite {
-  name: string;
-  url: string;
-  searchUrl: string;
-}
-
 export interface SearchCriteria {
   subjectAreas: string[]
   keywords: string
@@ -21,13 +15,6 @@ export interface SearchCriteria {
     startDate?: string  // ISO date string
     endDate?: string    // ISO date string
   }
-}
-
-export interface ScholarshipSearchRequest {
-  filters?: SearchCriteria;
-  maxResults?: number;
-  includeDeadlines?: boolean;
-  useRealScraping?: boolean;
 }
 
 // Interface for scholarship item (used for API responses)
