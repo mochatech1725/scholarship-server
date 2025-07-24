@@ -39,8 +39,8 @@ CREATE TABLE IF NOT EXISTS applications (
     student_id VARCHAR(255) NOT NULL,
     scholarship_name VARCHAR(500) NOT NULL,
     target_type VARCHAR(100),
-    company VARCHAR(255) NOT NULL,
-    company_website VARCHAR(500),
+    organization VARCHAR(255) NOT NULL,
+    org_website VARCHAR(500),
     platform VARCHAR(255),
     application_link VARCHAR(500),
     theme VARCHAR(255),
@@ -60,7 +60,7 @@ CREATE TABLE IF NOT EXISTS applications (
     INDEX idx_student_id (student_id),
     INDEX idx_scholarship_name (scholarship_name),
     INDEX idx_status (status),
-    INDEX idx_company (company),
+    INDEX idx_organization (organization),
     INDEX idx_due_date (due_date),
     INDEX idx_applications_student_scholarship (student_id, scholarship_name)
 );

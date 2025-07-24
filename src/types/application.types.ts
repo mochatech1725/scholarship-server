@@ -19,8 +19,8 @@ export interface IApplication {
   student_id: string;
   scholarship_name: string;
   target_type: TTargetType;
-  company: string;
-  company_website: string;
+  organization: string;
+  org_website: string;
   platform: string;
   application_link: string;
   theme: string;
