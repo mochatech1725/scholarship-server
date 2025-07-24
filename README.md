@@ -1,151 +1,91 @@
 # Scholarship Server
 
-A comprehensive scholarship management server built with Express.js, TypeScript, and AWS RDS MySQL, featuring Auth0 integration and AI-powered scholarship search capabilities.
+A comprehensive scholarship management server built with Express.js, TypeScript, and AWS RDS MySQL, featuring Auth0 integration and advanced scholarship search capabilities.
+
+---
 
 ## Features
 
 - **User Authentication**: Secure authentication using Auth0
 - **Application Management**: Create, read, update, and delete scholarship applications
 - **Recommender System**: Manage recommendation letters and references
-- **AI-Powered Scholarship Search**: Intelligent search using OpenAI and RAG (Retrieval-Augmented Generation)
+- **Scholarship Search (via External Scraper Service)**: This server connects to a MySQL database populated by a separate service called `scholarship-scraper`, which searches for scholarships (using AI and scraping) and stores them in the database. This server uses Knex to query and serve those results.
 - **RESTful API**: Clean, well-documented API endpoints
 - **TypeScript**: Full type safety and better development experience
 - **AWS RDS MySQL**: Scalable relational database for scholarships (via Knex)
+- **AWS Secrets Manager**: Securely manages database credentials
 - **Security**: Helmet, CORS
 
-## Database & Secrets
+---
 
-- **Scholarship data is stored in AWS RDS MySQL.**
-- **Knex** is used as the query builder for all scholarship-related queries.
-- **Database credentials are securely managed via AWS Secrets Manager.**
-  - See [`src/config/secrets.config.ts`](src/config/secrets.config.ts) for the utility to read secrets.
-  - The secret should be a JSON object with at least: `host`, `username`, `password`, `dbname` (and optionally `port`, `ssl`).
+## AWS Integration
 
-## AI Scholarship Search Feature
+This project uses:
 
-The application includes an advanced AI-powered scholarship search system that uses:
+- **AWS RDS (MySQL)**: For storing all application and scholarship data
+- **AWS Secrets Manager**: For securely managing database credentials
 
-- **OpenAI GPT-3.5-turbo** for intelligent analysis and ranking
-- **RAG (Retrieval-Augmented Generation)** approach with predefined scholarship websites
-- **Web scraping capabilities** (with rate limiting and respectful practices)
-- **Semantic search** based on user keywords
-- **Relevance scoring** for optimal results
-- **MySQL/Knex** for fast, flexible scholarship filtering
+> **Note:** This server does NOT use AWS Bedrock, Comprehend, or DynamoDB. Scholarship data is provided by the external `scholarship-scraper` service.
 
-### Scholarship Search Endpoints
+### Environment Variables
 
-#### POST `/api/scholarships/find`
-Search for scholarships using AI-powered analysis and MySQL filtering.
+Add the following to your `.env` file:
 
-**Request Body:**
-```json
-{
-  "keywords": ["computer science", "undergraduate", "women"],
-  "maxResults": 10,
-  "includeDeadlines": true,
-  "useRealScraping": false
-}
+```bash
+# AWS RDS/Secrets Configuration
+AWS_REGION=us-east-1
+AWS_ACCESS_KEY_ID=your-aws-access-key-id
+AWS_SECRET_ACCESS_KEY=your-aws-secret-access-key
+# The secret should contain host, username, password, dbname, and optionally port/ssl
 ```
 
-**Response:**
-```json
-{
-  "success": true,
-  "data": {
-    "scholarships": [
-      {
-        "title": "Computer Science Excellence Scholarship",
-        "description": "Scholarship for students demonstrating excellence in computer science...",
-        "amount": "$5,000 - $10,000",
-        "deadline": "March 15, 2024",
-        "eligibility": "GPA 3.5+, Full-time student, Demonstrated leadership",
-        "source": "Scholarships.com",
-        "relevanceScore": 0.95
-      }
-    ],
-    "totalFound": 6,
-    "keywords": ["computer science", "undergraduate", "women"],
-    "searchTimestamp": "2024-01-15T10:30:00.000Z"
-  },
-  "metadata": {
-    "sourcesUsed": ["Scholarships.com", "Fastweb", "College Board", "Appily", "Niche"],
-    "aiModel": "gpt-3.5-turbo",
-    "processingTime": "2024-01-15T10:30:05.000Z",
-    "realScrapingUsed": false
-  }
-}
-```
+---
 
-#### GET `/api/scholarships/sources`
-Get available scholarship sources used by the AI search.
+## How to Run Locally (with AWS RDS MySQL)
 
-#### GET `/api/scholarships/health`
-Check the health status of the AI service.
+### 1. Clone and Install
 
-### Supported Scholarship Sources
-
-The AI search system integrates with the following scholarship websites:
-
-1. **Scholarships.com** - Comprehensive scholarship database
-2. **Fastweb** - Leading scholarship search platform
-3. **College Board** - Official College Board scholarship search
-4. **appily** - Scholarship matching platform
-5. **Niche** - College and scholarship search platform
-
-### How the AI Search Works
-
-1. **Keyword Processing**: User keywords are analyzed for semantic meaning
-2. **Data Retrieval**: Scholarship data is gathered from multiple sources
-3. **AI Analysis**: OpenAI GPT-3.5-turbo analyzes and ranks scholarships by relevance
-4. **Filtering**: Results are filtered based on amount, deadlines, and other criteria using MySQL/Knex
-5. **Ranking**: Scholarships are ranked by relevance score (0.0 to 1.0)
-
-## Installation
-
-1. Clone the repository:
 ```bash
 git clone <repository-url>
 cd scholarship-server
-```
-
-2. Install dependencies:
-```bash
 npm install
-```
-
-3. Set up environment variables:
-```bash
 cp env.example .env
 ```
 
-4. Configure your environment variables in `.env`:
-```env
-# Server Configuration
-NODE_ENV=development
-PORT=3000
-APP_DEBUG=true
+### 2. Configure Environment
 
-# MySQL/AWS RDS Configuration (via AWS Secrets Manager)
-# No direct DB credentials here; see AWS Secrets Manager section
+Edit `.env` with your Auth0, AWS, and other credentials as needed.
 
-# CORS Configuration
-CORS_ORIGIN=http://localhost:3000
+### 3. Connect to AWS RDS MySQL via SSH Bastion Tunnel (Recommended)
 
-# Auth0 Configuration
-AUTH0_ISSUER_BASE_URL=https://your-tenant.auth0.com/
-AUTH0_AUDIENCE=https://your-api-identifier
+For security, direct access to AWS RDS is not allowed. Use SSH tunneling through a bastion host:
 
-# OpenAI Configuration
-OPENAI_API_KEY=your-openai-api-key-here
+#### **Recommended: Use Provided Script**
 
-# App Secret
-APP_SECRET=your-super-secret-key-at-least-32-characters-long
-```
-
-5. Start the development server:
 ```bash
-npm run dev
+bash scripts/start-bastion.sh
 ```
+
+This will open a tunnel from your local port 3307 to the remote RDS MySQL instance via the bastion host. The script uses:
+
+```
+ssh -i ~/.ssh/bastion-key.pem -L 3307:<rds-endpoint>:3306 ec2-user@<bastion-ip>
+```
+
+- Replace `~/.ssh/bastion-key.pem` with your SSH key path if needed.
+- Keep this terminal open while developing locally.
+
+#### **Configure Your Local .env**
+
+Set your MySQL connection to use `localhost:3307` (the tunnel):
+
+```
+DB_HOST=127.0.0.1
+DB_PORT=3307
+```
+
+> **Note:** All database traffic will be securely tunneled through the bastion host.
+
 
 ## API Endpoints
 
@@ -176,117 +116,8 @@ npm run dev
 - `PUT /api/recommenders/:id` - Update recommender
 - `DELETE /api/recommenders/:id` - Delete recommender
 
-### AI Scholarship Search
-- `POST /api/scholarships/find` - Search for scholarships using AI
+### Scholarship Search
+- `POST /api/scholarships/find` - Search for scholarships (queries MySQL database populated by scholarship-scraper)
 - `GET /api/scholarships/sources` - Get available scholarship sources
-- `GET /api/scholarships/health` - Check AI service health
+- `GET /api/scholarships/health` - Check service health
 
-## Development
-
-### Scripts
-- `npm run dev` - Start development server with nodemon
-- `npm run build` - Build TypeScript to JavaScript
-- `npm start` - Start production server
-- `npm test` - Run tests
-
-### Project Structure
-```
-src/
-├── controllers/          # Route controllers
-├── routes/              # API routes
-├── models/              # MongoDB models (user/applications only)
-├── middleware/          # Custom middleware
-├── config/              # Configuration files (including secrets.config.ts)
-├── services/            # Service logic (including aws.db.service.ts)
-├── types/               # TypeScript type definitions
-├── database/            # Database connection and setup
-├── errors/              # Error handling
-└── index.ts            # Main application file
-```
-
-## Security Features
-
-- **Auth0 Integration**: Secure authentication and authorization
-- **Helmet**: Security headers
-- **CORS**: Cross-origin resource sharing configuration
-- **Input Validation**: Request validation and sanitization
-- **Rate Limiting**: API rate limiting (for web scraping)
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests if applicable
-5. Submit a pull request
-
-## License
-
-This project is licensed under the MIT License. 
-
-## AI-Driven Scraping Approach
-
-The system uses a sophisticated AI approach to handle the variability in website structures:
-
-### AI Approach
-
-**AI-Driven Scraping (Current):**
-- Uses OpenAI to intelligently parse any HTML structure
-- Recognizes semantic meaning regardless of field names
-- Automatically adapts to different website layouts
-- Handles variations like:
-  - Deadline: `due date`, `application deadline`, `closing date`
-  - Amount: `award amount`, `scholarship value`, `prize money`
-  - Organization: `company`, `sponsor`, `provider`, `institution`
-  - Ethnicity: `race`, `background`, `heritage`
-
-### How It Works
-
-1. **HTML Fetching**: Downloads the raw HTML from scholarship websites
-2. **Content Cleaning**: Removes scripts, styles, and unnecessary elements
-3. **AI Analysis**: Sends cleaned HTML to OpenAI with specialized prompts
-4. **Intelligent Extraction**: AI identifies scholarship opportunities and extracts relevant fields
-5. **Structured Output**: Returns standardized JSON with all scholarship details
-
-## Environment Variables
-
-```bash
-OPENAI_API_KEY=your_openai_api_key
-OPENAI_MODEL=gpt-3.5-turbo  # or gpt-4 for better accuracy
-MAX_RESULTS=10
-```
-
-## API Endpoints
-
-- `POST /api/search` - Search for scholarships with filters
-- `GET /api/sources` - Get available scholarship sources
-
-## Example Usage
-
-```javascript
-// Search for scholarships
-const response = await fetch('/api/search', {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({
-    filters: {
-      keywords: "computer science",
-      educationLevel: "undergraduate",
-      subjectAreas: ["Computer Science", "Technology"],
-    },
-    maxResults: 10
-  })
-});
-```
-
-## Supported Websites
-
-- Fastweb
-- College Board
-- Appily
-- Niche
-- Scholarship360
-- Unigo
-- Peterson's
-
-The AI approach allows the system to work with any scholarship website without manual configuration. 

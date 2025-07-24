@@ -1,20 +1,20 @@
 import { Request, Response } from 'express';
 import { getKnex } from '../config/knex.config.js';
-import { IApplication } from '../types/application.types.js';
-import { IRecommendation } from '../types/recommendation.types.js';
-import { IEssay } from '../types/essay.types.js';
+import { Application } from '../shared-types/application.types.js';
+import { Recommendation } from '../shared-types/recommendation.types.js';
+import { Essay } from '../shared-types/essay.types.js';
 
 
-async function populateApplicationWithRelatedData(application: IApplication): Promise<IApplication> {
+async function populateApplicationWithRelatedData(application: Application): Promise<Application> {
   const knex = getKnex();
   
   // Fetch recommendations
-  const recommendations = await knex<IRecommendation>('recommendations')
+  const recommendations = await knex<Recommendation>('recommendations')
     .select('*')
     .where({ application_id: application.application_id });
   
   // Fetch essays
-  const essays = await knex<IEssay>('essays')
+  const essays = await knex<Essay>('essays')
     .select('*')
     .where({ application_id: application.application_id });
   
@@ -25,14 +25,14 @@ async function populateApplicationWithRelatedData(application: IApplication): Pr
   };
 }
 
-async function populateApplicationsWithRelatedData(applications: IApplication[]): Promise<IApplication[]> {
+async function populateApplicationsWithRelatedData(applications: Application[]): Promise<Application[]> {
   return Promise.all(applications.map(app => populateApplicationWithRelatedData(app)));
 }
 
 export const getAll = async (req: Request, res: Response) => {
   try {
     const knex = getKnex();
-    const applications = await knex<IApplication>('applications')
+    const applications = await knex<Application>('applications')
       .select('*')
       .orderBy('created_at', 'desc');
     
@@ -47,7 +47,7 @@ export const getAll = async (req: Request, res: Response) => {
 export const getByUserId = async (req: Request, res: Response) => {
   try {
     const knex = getKnex();
-    const applications = await knex<IApplication>('applications')
+    const applications = await knex<Application>('applications')
       .select('*')
       .where({ student_id: req.params.userId })
       .orderBy('created_at', 'desc');
@@ -63,7 +63,7 @@ export const getByUserId = async (req: Request, res: Response) => {
 export const getById = async (req: Request, res: Response) => {
   try {
     const knex = getKnex();
-    const application = await knex<IApplication>('applications')
+    const application = await knex<Application>('applications')
       .select('*')
       .where({ application_id: parseInt(req.params.id) })
       .first();
@@ -83,10 +83,10 @@ export const getById = async (req: Request, res: Response) => {
 export const create = async (req: Request, res: Response) => {
   try {
     const knex = getKnex();
-    const [applicationId] = await knex<IApplication>('applications')
+    const [applicationId] = await knex<Application>('applications')
       .insert(req.body);
     
-    const newApplication = await knex<IApplication>('applications')
+    const newApplication = await knex<Application>('applications')
       .select('*')
       .where({ application_id: applicationId })
       .first();
@@ -106,7 +106,7 @@ export const create = async (req: Request, res: Response) => {
 export const update = async (req: Request, res: Response) => {
   try {
     const knex = getKnex();
-    const updatedCount = await knex<IApplication>('applications')
+    const updatedCount = await knex<Application>('applications')
       .where({ application_id: parseInt(req.params.id) })
       .update({
         ...req.body,
@@ -117,7 +117,7 @@ export const update = async (req: Request, res: Response) => {
       return res.status(404).json({ message: 'Application not found' });
     }
     
-    const updatedApplication = await knex<IApplication>('applications')
+    const updatedApplication = await knex<Application>('applications')
       .select('*')
       .where({ application_id: parseInt(req.params.id) })
       .first();
@@ -137,7 +137,7 @@ export const update = async (req: Request, res: Response) => {
 export const deleteApplication = async (req: Request, res: Response) => {
   try {
     const knex = getKnex();
-    const deletedCount = await knex<IApplication>('applications')
+    const deletedCount = await knex<Application>('applications')
       .where({ application_id: parseInt(req.params.id) })
       .del();
     

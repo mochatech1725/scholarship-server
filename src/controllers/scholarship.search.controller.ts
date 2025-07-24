@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import ScholarshipSearchService from '../services/scholarship-search.service.js';
 import { SearchService, initKnexFromAWSSecret } from '../services/aws.db.service.js';
-import { ScholarshipItem } from '../types/scholarship-search.types.js';
+import { Scholarship } from '../shared-types/scholarship.types.js';
 import { MAX_SCHOLARSHIP_SEARCH_RESULTS, NODE_ENV } from '../utils/constants.js';
 
 let searchService: ScholarshipSearchService;
@@ -17,7 +17,7 @@ export async function initScholarshipSearchController(secretArn: string) {
  * @param scholarships - Array of scholarship results from the service
  * @returns Processed scholarship results with eligibility as string
  */
-const convertScholarshipItems = (scholarships: ScholarshipItem[]): ScholarshipItem[] => {
+const convertScholarshipItems = (scholarships: Scholarship[]): Scholarship[] => {
   return scholarships.map(scholarship => {
     let eligibility = scholarship.eligibility;
     if (eligibility && typeof eligibility === 'object') {

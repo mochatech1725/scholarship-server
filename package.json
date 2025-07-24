@@ -9,10 +9,7 @@
     "dev": "nodemon",
     "build": "tsc",
     "test": "jest",
-    "token": "node scripts/get-auth0-token.js",
-    "migrate": "ts-node scripts/migrate-data.ts",
-    "migrate:dry-run": "ts-node scripts/migrate-data.ts --dry-run",
-    "migrate:custom": "ts-node scripts/migrate-data.ts --data-dir=./custom-data"
+    "token": "node scripts/get-auth0-token.js"
   },
   "dependencies": {
     "@aws-sdk/client-bedrock-runtime": "^3.840.0",

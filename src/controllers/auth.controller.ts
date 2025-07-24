@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import { getKnex } from '../config/knex.config.js';
-import { User } from '../types/user.types.js';
-import { UserSearchPreferences } from '../types/user-search-preferences.types.js';
+import { User } from '../shared-types/user.types.js';
+import { UserSearchPreferences } from '../shared-types/user-search-preferences.types.js';
 
 export const login = async (req: Request, res: Response) => {
   console.log('login called');

@@ -1,5 +1,10 @@
 import { SearchService } from './aws.db.service.js';
-import { ScholarshipItem, SearchCriteria, SearchOptions } from '../types/scholarship-search.types.js';
+import { Scholarship } from '../shared-types/scholarship.types.js';
+import { SearchCriteria, SearchOptions } from '../shared-types/scholarship-search.types.js';
+
+// Use a local type to add relevanceScore for in-memory operations
+// eslint-disable-next-line @typescript-eslint/no-empty-interface
+interface ScoredScholarship extends Scholarship { relevanceScore?: number; }
 
 export class ScholarshipSearchService {
   private searchService: SearchService;
@@ -15,7 +20,7 @@ export class ScholarshipSearchService {
     criteria: SearchCriteria, 
     options: SearchOptions = {}
   ): Promise<{
-    scholarships: ScholarshipItem[];
+    scholarships: Scholarship[];
     totalFound: number;
     searchTime: number;
     filters: {
@@ -32,10 +37,11 @@ export class ScholarshipSearchService {
       scholarships = this.applyFilters(scholarships, criteria, options);
 
       // Sort results
+      scholarships = (scholarships as ScoredScholarship[]);
       scholarships = this.sortScholarships(scholarships, options.sortBy || 'relevance', options.sortOrder || 'desc');
 
       // Calculate relevance scores
-      scholarships = scholarships.map(scholarship => ({
+      scholarships = (scholarships as ScoredScholarship[]).map(scholarship => ({
         ...scholarship,
         relevanceScore: this.calculateRelevanceScore(scholarship, criteria)
       }));
@@ -65,10 +71,10 @@ export class ScholarshipSearchService {
    * Apply minimal post-processing filters (most filtering now done at DB level)
    */
   private applyFilters(
-    scholarships: ScholarshipItem[], 
+    scholarships: Scholarship[], 
     criteria: SearchCriteria, 
     options: SearchOptions
-  ): ScholarshipItem[] {
+  ): Scholarship[] {
     return scholarships.filter(scholarship => {
       // Only filter by deadline if specified (not handled by DB)
       if (!options.includeExpired && scholarship.deadline) {
@@ -84,10 +90,10 @@ export class ScholarshipSearchService {
    * Sort scholarships by specified criteria
    */
   private sortScholarships(
-    scholarships: ScholarshipItem[], 
+    scholarships: ScoredScholarship[], 
     sortBy: string, 
     sortOrder: string
-  ): ScholarshipItem[] {
+  ): ScoredScholarship[] {
     return scholarships.sort((a, b) => {
       let comparison = 0;
       
@@ -99,7 +105,7 @@ export class ScholarshipSearchService {
           comparison = this.compareAmounts(a.max_award, b.max_award);
           break;
         case 'title':
-          comparison = (a.name || '').localeCompare(b.name || '');
+          comparison = (a.title || '').localeCompare(b.title || '');
           break;
         case 'relevance':
         default:
@@ -138,7 +144,7 @@ export class ScholarshipSearchService {
   /**
    * Calculate relevance score based on search criteria
    */
-  private calculateRelevanceScore(scholarship: ScholarshipItem, criteria: SearchCriteria): number {
+  private calculateRelevanceScore(scholarship: Scholarship, criteria: SearchCriteria): number {
     let score = 0;
     
     // Build search text and terms for scoring
@@ -160,9 +166,9 @@ export class ScholarshipSearchService {
         score += Math.round(matchRatio * 20);
         
         // Bonus for exact matches in title
-        const name = (scholarship.name || '').toLowerCase();
+        const title = (scholarship.title || '').toLowerCase();
         const titleMatches = searchTerms.filter((term: string) => 
-          name.includes(term.toLowerCase())
+          title.includes(term.toLowerCase())
         );
         score += titleMatches.length * 5;
       }
@@ -172,11 +178,11 @@ export class ScholarshipSearchService {
     // Keyword matching in title and description
     if (criteria.keywords) {
       const keywords = criteria.keywords.toLowerCase().split(' ');
-      const name = (scholarship.name || '').toLowerCase();
+      const title = (scholarship.title || '').toLowerCase();
       const description = (scholarship.description || '').toLowerCase();
       
       keywords.forEach(keyword => {
-        if (name.includes(keyword)) score += 10;
+        if (title.includes(keyword)) score += 10;
         if (description.includes(keyword)) score += 5;
       });
     }
@@ -213,12 +219,12 @@ export class ScholarshipSearchService {
   /**
    * Build searchable text from scholarship fields for scoring
    */
-  private buildSearchTextForScoring(scholarship: ScholarshipItem): string {
+  private buildSearchTextForScoring(scholarship: Scholarship): string {
     const textParts: string[] = [];
     
     if (scholarship.eligibility) textParts.push(scholarship.eligibility);
     if (scholarship.description) textParts.push(scholarship.description);
-    if (scholarship.name) textParts.push(scholarship.name);
+    if (scholarship.title) textParts.push(scholarship.title);
     if (scholarship.organization) textParts.push(scholarship.organization);
     
     return textParts.join(' ');
@@ -281,7 +287,7 @@ export class ScholarshipSearchService {
   /**
    * Get available filter options from results
    */
-  private getAvailableFilters(scholarships: ScholarshipItem[]): string[] {
+  private getAvailableFilters(scholarships: Scholarship[]): string[] {
     const filters: string[] = [];
     
     // Collect unique values for each filter type
@@ -305,7 +311,7 @@ export class ScholarshipSearchService {
   /**
    * Get scholarship by ID
    */
-  async getScholarshipById(id: string): Promise<ScholarshipItem | null> {
+  async getScholarshipById(id: string): Promise<Scholarship | null> {
     try {
       const item = await this.searchService.getScholarshipById(id);
       if (!item) return null;

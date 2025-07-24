@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { getKnex } from '../config/knex.config.js';
-import { Recommender } from '../types/recommender.types.js';
+import { Recommender } from '../shared-types/recommender.types.js';
 
 export const getAll = async (req: Request, res: Response) => {
   try {

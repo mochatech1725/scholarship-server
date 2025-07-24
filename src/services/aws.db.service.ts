@@ -1,6 +1,7 @@
 import { SecretsManagerClient, GetSecretValueCommand } from '@aws-sdk/client-secrets-manager';
 import knex, { Knex } from 'knex';
-import { SearchCriteria, ScholarshipItem } from '../types/scholarship-search.types.js';
+import { SearchCriteria } from '../shared-types/scholarship-search.types.js';
+import { Scholarship } from '../shared-types/scholarship.types.js';
 
 // Helper to fetch DB credentials from AWS Secrets Manager and initialize Knex
 export async function initKnexFromAWSSecret(secretArn: string): Promise<Knex> {
@@ -31,9 +32,9 @@ export class SearchService {
     this.db = dbConnection;
   }
 
-  async searchScholarships(criteria: SearchCriteria): Promise<ScholarshipItem[]> {
+  async searchScholarships(criteria: SearchCriteria): Promise<Scholarship[]> {
     const validatedCriteria = this.validateSearchCriteria(criteria);
-    let query = this.db<ScholarshipItem>('scholarships').select('*');
+    let query = this.db<Scholarship>('scholarships').select('*');
 
     if (validatedCriteria.academic_level) {
       query = query.where('academic_level', validatedCriteria.academic_level);
@@ -71,8 +72,8 @@ export class SearchService {
     return await query.limit(100);
   }
 
-  async getScholarshipById(scholarship_id: string): Promise<ScholarshipItem | null> {
-    const result = await this.db<ScholarshipItem>('scholarships').where({ scholarship_id }).first();
+  async getScholarshipById(scholarship_id: string): Promise<Scholarship | null> {
+    const result = await this.db<Scholarship>('scholarships').where({ scholarship_id }).first();
     return result || null;
   }
 
