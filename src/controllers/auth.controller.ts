@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { getKnex } from '../config/knex.config.js';
 import { User } from '../types/user.types.js';
+import { UserSearchPreferences } from '../types/user-search-preferences.types.js';
 
 export const login = async (req: Request, res: Response) => {
   console.log('login called');
@@ -29,10 +30,19 @@ export const login = async (req: Request, res: Response) => {
 
     console.log('Existing user found:', user.user_id);
 
+    // Fetch search preferences for the user
+    const searchPreferences = await knex<UserSearchPreferences>('user_search_preferences')
+      .select('*')
+      .where({ user_id: user.user_id })
+      .first();
+
+    const userWithPreferences = {
+      ...user,
+      searchPreferences: searchPreferences || null
+    };
+
     const response = {
-      user: {
-        ...user
-      },
+      user: userWithPreferences,
       auth0Profile: auth0User
     };
 
@@ -96,18 +106,18 @@ export const createUser = async (req: Request, res: Response) => {
       .returning('*');
 
     // If profile data is provided, create search preferences
-    if (req.body.profile?.userPreferences?.searchPreferences) {
-      const searchPrefs = req.body.profile.userPreferences.searchPreferences;
+    if (req.body.profile?.searchPreferences) {
+      const searchPrefs = req.body.profile.searchPreferences;
       const searchPreferencesData = {
         user_id: savedUser.user_id,
-        target_type: searchPrefs.targetType,
-        subject_areas: searchPrefs.subjectAreas ? JSON.stringify(searchPrefs.subjectAreas) : undefined,
+        target_type: searchPrefs.target_type,
+        subject_areas: searchPrefs.subject_areas ? JSON.stringify(searchPrefs.subject_areas) : undefined,
         gender: searchPrefs.gender,
         ethnicity: searchPrefs.ethnicity,
-        academic_gpa: searchPrefs.academicGPA,
-        essay_required: searchPrefs.essayRequired,
-        recommendation_required: searchPrefs.recommendationRequired,
-        academic_level: searchPrefs.academicLevel
+        academic_gpa: searchPrefs.academic_gpa,
+        essay_required: searchPrefs.essay_required,
+        recommendations_required: searchPrefs.recommendations_required,
+        academic_level: searchPrefs.academic_level
       };
 
       await knex('user_search_preferences').insert(searchPreferencesData);

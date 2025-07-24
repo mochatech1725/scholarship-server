@@ -96,10 +96,10 @@ export class ScholarshipSearchService {
           comparison = this.compareDates(a.deadline, b.deadline);
           break;
         case 'amount':
-          comparison = this.compareAmounts(a.maxAward, b.maxAward);
+          comparison = this.compareAmounts(a.max_award, b.max_award);
           break;
         case 'title':
-          comparison = (a.title || '').localeCompare(b.title || '');
+          comparison = (a.name || '').localeCompare(b.name || '');
           break;
         case 'relevance':
         default:
@@ -160,9 +160,9 @@ export class ScholarshipSearchService {
         score += Math.round(matchRatio * 20);
         
         // Bonus for exact matches in title
-        const title = (scholarship.title || '').toLowerCase();
+        const name = (scholarship.name || '').toLowerCase();
         const titleMatches = searchTerms.filter((term: string) => 
-          title.includes(term.toLowerCase())
+          name.includes(term.toLowerCase())
         );
         score += titleMatches.length * 5;
       }
@@ -172,24 +172,24 @@ export class ScholarshipSearchService {
     // Keyword matching in title and description
     if (criteria.keywords) {
       const keywords = criteria.keywords.toLowerCase().split(' ');
-      const title = (scholarship.title || '').toLowerCase();
+      const name = (scholarship.name || '').toLowerCase();
       const description = (scholarship.description || '').toLowerCase();
       
       keywords.forEach(keyword => {
-        if (title.includes(keyword)) score += 10;
+        if (name.includes(keyword)) score += 10;
         if (description.includes(keyword)) score += 5;
       });
     }
     // Academic level matching
-    if (criteria.academicLevel && scholarship.academicLevel) {
-      if (scholarship.academicLevel.toLowerCase().includes(criteria.academicLevel.toLowerCase())) {
+    if (criteria.academic_level && scholarship.academic_level) {
+      if (scholarship.academic_level.toLowerCase().includes(criteria.academic_level.toLowerCase())) {
         score += 7;
       }
     }
 
     // Geographic restrictions matching
-    if (criteria.geographicRestrictions && scholarship.geographicRestrictions) {
-      if (scholarship.geographicRestrictions.toLowerCase().includes(criteria.geographicRestrictions.toLowerCase())) {
+    if (criteria.geographic_restrictions && scholarship.geographic_restrictions) {
+      if (scholarship.geographic_restrictions.toLowerCase().includes(criteria.geographic_restrictions.toLowerCase())) {
         score += 6;
       }
     }
@@ -218,7 +218,7 @@ export class ScholarshipSearchService {
     
     if (scholarship.eligibility) textParts.push(scholarship.eligibility);
     if (scholarship.description) textParts.push(scholarship.description);
-    if (scholarship.title) textParts.push(scholarship.title);
+    if (scholarship.name) textParts.push(scholarship.name);
     if (scholarship.organization) textParts.push(scholarship.organization);
     
     return textParts.join(' ');
@@ -236,8 +236,8 @@ export class ScholarshipSearchService {
     }
     
     // Add target type (if not 'Both')
-    if (criteria.targetType && criteria.targetType !== 'Both') {
-      terms.push(criteria.targetType);
+    if (criteria.target_type && criteria.target_type !== 'Both') {
+      terms.push(criteria.target_type);
     }
     
     // Add ethnicity
@@ -268,12 +268,12 @@ export class ScholarshipSearchService {
     const filters: string[] = [];
     
     if (criteria.keywords) filters.push(`Keywords: ${criteria.keywords}`);
-    if (criteria.academicLevel) filters.push(`Academic Level: ${criteria.academicLevel}`);
+    if (criteria.academic_level) filters.push(`Academic Level: ${criteria.academic_level}`);
     if (criteria.subjectAreas?.length) filters.push(`Subjects: ${criteria.subjectAreas.join(', ')}`);
-    if (criteria.targetType && criteria.targetType !== 'Both') filters.push(`Target Type: ${criteria.targetType}`);
+    if (criteria.target_type && criteria.target_type !== 'Both') filters.push(`Target Type: ${criteria.target_type}`);
     if (criteria.gender) filters.push(`Gender: ${criteria.gender}`);
     if (criteria.ethnicity) filters.push(`Ethnicity: ${criteria.ethnicity}`);
-    if (criteria.geographicRestrictions) filters.push(`Location: ${criteria.geographicRestrictions}`);
+    if (criteria.geographic_restrictions) filters.push(`Location: ${criteria.geographic_restrictions}`);
     
     return filters;
   }
@@ -290,7 +290,7 @@ export class ScholarshipSearchService {
     const organizations = new Set<string>();
     
     scholarships.forEach(scholarship => {
-      if (scholarship.academicLevel) academicLevels.add(scholarship.academicLevel);
+      if (scholarship.academic_level) academicLevels.add(scholarship.academic_level);
       if (scholarship.country) countries.add(scholarship.country);
       if (scholarship.organization) organizations.add(scholarship.organization);
     });

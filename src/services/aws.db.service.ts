@@ -35,8 +35,8 @@ export class SearchService {
     const validatedCriteria = this.validateSearchCriteria(criteria);
     let query = this.db<ScholarshipItem>('scholarships').select('*');
 
-    if (validatedCriteria.academicLevel) {
-      query = query.where('academic_level', validatedCriteria.academicLevel);
+    if (validatedCriteria.academic_level) {
+      query = query.where('academic_level', validatedCriteria.academic_level);
     }
     if (validatedCriteria.ethnicity) {
       query = query.where('ethnicity', validatedCriteria.ethnicity);
@@ -47,8 +47,8 @@ export class SearchService {
     if (validatedCriteria.subjectAreas && validatedCriteria.subjectAreas.length > 0) {
       query = query.whereIn('subject_area', validatedCriteria.subjectAreas);
     }
-    if (validatedCriteria.targetType && validatedCriteria.targetType !== 'Both') {
-      query = query.where('target_type', validatedCriteria.targetType);
+    if (validatedCriteria.target_type && validatedCriteria.target_type !== 'Both') {
+      query = query.where('target_type', validatedCriteria.target_type);
     }
     if (validatedCriteria.minAmount) {
       query = query.where('max_award', '>=', validatedCriteria.minAmount);
@@ -57,9 +57,9 @@ export class SearchService {
       query = query.where('min_award', '<=', validatedCriteria.maxAmount);
     }
     if (validatedCriteria.keywords) {
-      // Simple keyword search in title, description, eligibility
+      // Simple keyword search in name, description, eligibility
       query = query.where(qb => {
-        qb.where('title', 'like', `%${validatedCriteria.keywords}%`)
+        qb.where('name', 'like', `%${validatedCriteria.keywords}%`)
           .orWhere('description', 'like', `%${validatedCriteria.keywords}%`)
           .orWhere('eligibility', 'like', `%${validatedCriteria.keywords}%`);
       });
@@ -67,12 +67,12 @@ export class SearchService {
     if (validatedCriteria.deadlineRange && validatedCriteria.deadlineRange.startDate && validatedCriteria.deadlineRange.endDate) {
       query = query.whereBetween('deadline', [validatedCriteria.deadlineRange.startDate, validatedCriteria.deadlineRange.endDate]);
     }
-    query = query.where('active', true);
+    query = query.where('is_active', true);
     return await query.limit(100);
   }
 
-  async getScholarshipById(id: string): Promise<ScholarshipItem | null> {
-    const result = await this.db<ScholarshipItem>('scholarships').where({ id }).first();
+  async getScholarshipById(scholarship_id: string): Promise<ScholarshipItem | null> {
+    const result = await this.db<ScholarshipItem>('scholarships').where({ scholarship_id }).first();
     return result || null;
   }
 

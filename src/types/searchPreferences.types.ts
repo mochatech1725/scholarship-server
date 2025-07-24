@@ -7,13 +7,14 @@ export interface ScholarshipWebsite {
 export interface SearchCriteria {
   subjectAreas: string[]
   keywords: string
-  academicLevel: string | null
-  targetType: string | null
+  academic_level: string | null
+  target_type: string | null
   gender: string | null
   ethnicity: string | null
-  geographicRestrictions: string | null
-  essayRequired: boolean | null
-  recommendationRequired: boolean | null
+  geographic_restrictions: string | null
+  essay_required: boolean | null
+  recommendations_required: boolean | null
+  academic_gpa?: number
   minAmount?: number
   maxAmount?: number
   deadlineRange?: {
@@ -31,35 +32,36 @@ export interface ScholarshipSearchRequest {
 
 // Interface for scholarship item (used for API responses)
 export interface ScholarshipItem {
-  id?: string;
-  title: string;
-  description: string;
-  organization?: string;
-  targetType?: string;
-  minAward?: number;
-  maxAward?: number;
+  scholarship_id?: string;
+  name: string;
   deadline?: string;
+  url?: string;
+  description: string;
   eligibility?: string;
-  gender?: string;
+  organization?: string;
+  academic_level?: string;
+  geographic_restrictions?: string;
+  target_type?: string;
   ethnicity?: string;
-  academicLevel?: string;
-  essayRequired?: boolean;
-  recommendationRequired?: boolean;
+  gender?: string;
+  min_award?: number;
+  max_award?: number;
   renewable?: boolean;
   country?: string;
-  geographicRestrictions?: string;
-  applyUrl?: string;
-  url?: string;
+  apply_url?: string;
+  is_active?: boolean;
+  essay_required?: boolean;
+  recommendations_required?: boolean;
   source: string;
   relevanceScore?: number;
 }
 
 // Interface for DynamoDB storage (with string boolean values)
-export interface ScholarshipDBItem extends Omit<ScholarshipItem, 'essayRequired' | 'recommendationRequired' | 'renewable'> {
-  essayRequired?: string; // "true" or "false" for DynamoDB
-  recommendationRequired?: string; // "true" or "false" for DynamoDB
+export interface ScholarshipDBItem extends Omit<ScholarshipItem, 'essay_required' | 'recommendations_required' | 'renewable' | 'is_active'> {
+  essay_required?: string; // "true" or "false" for DynamoDB
+  recommendations_required?: string; // "true" or "false" for DynamoDB
   renewable?: string; // "true" or "false" for DynamoDB
-  active?: string; // "true" or "false" for DynamoDB
+  is_active?: string; // "true" or "false" for DynamoDB
   createdAt?: string;
   updatedAt?: string;
 }
