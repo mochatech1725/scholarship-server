@@ -4,7 +4,7 @@ import {
   SubjectArea, 
   Gender, 
   Ethnicity,
-} from './searchPreferences.types.js';
+} from './scholarship-search.types.js';
 
 export interface UserSearchPreferences {
   user_id: number;

@@ -1,6 +1,6 @@
 import { SecretsManagerClient, GetSecretValueCommand } from '@aws-sdk/client-secrets-manager';
 import knex, { Knex } from 'knex';
-import { SearchCriteria, ScholarshipItem } from '../types/searchPreferences.types.js';
+import { SearchCriteria, ScholarshipItem } from '../types/scholarship-search.types.js';
 
 // Helper to fetch DB credentials from AWS Secrets Manager and initialize Knex
 export async function initKnexFromAWSSecret(secretArn: string): Promise<Knex> {

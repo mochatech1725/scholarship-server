@@ -1,5 +1,5 @@
 import { SearchService } from './aws.db.service.js';
-import { ScholarshipItem, SearchCriteria, SearchOptions } from '../types/searchPreferences.types.js';
+import { ScholarshipItem, SearchCriteria, SearchOptions } from '../types/scholarship-search.types.js';
 
 export class ScholarshipSearchService {
   private searchService: SearchService;

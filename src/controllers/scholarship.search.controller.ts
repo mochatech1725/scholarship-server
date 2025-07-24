@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import ScholarshipSearchService from '../services/scholarship-search.service.js';
 import { SearchService, initKnexFromAWSSecret } from '../services/aws.db.service.js';
-import { ScholarshipItem } from '../types/searchPreferences.types.js';
+import { ScholarshipItem } from '../types/scholarship-search.types.js';
 import { MAX_SCHOLARSHIP_SEARCH_RESULTS, NODE_ENV } from '../utils/constants.js';
 
 let searchService: ScholarshipSearchService;
