@@ -21,7 +21,7 @@ export const getById = async (req: Request, res: Response) => {
     const knex = getKnex();
     const recommender = await knex<Recommender>('recommenders')
       .select('*')
-      .where({ recommender_id: parseInt(req.params.id) })
+      .where({ recommender_id: parseInt(req.params.recommender_id) })
       .first();
     
     if (!recommender) {
@@ -35,12 +35,12 @@ export const getById = async (req: Request, res: Response) => {
   }
 };
 
-export const getByUserId = async (req: Request, res: Response) => {
+export const getByStudentId = async (req: Request, res: Response) => {
   try {
     const knex = getKnex();
     const recommenders = await knex<Recommender>('recommenders')
       .select('*')
-      .where({ student_id: req.params.userId })
+      .where({ student_id: parseInt(req.params.student_id) })
       .orderBy('created_at', 'desc');
     
     res.json(recommenders || []);

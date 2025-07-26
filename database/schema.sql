@@ -80,7 +80,7 @@ CREATE TABLE IF NOT EXISTS essays (
 
 CREATE TABLE IF NOT EXISTS recommenders (
     recommender_id INT AUTO_INCREMENT PRIMARY KEY,
-    student_id VARCHAR(255) NOT NULL,
+    student_id INT NOT NULL,
     first_name VARCHAR(100) NOT NULL,
     last_name VARCHAR(100) NOT NULL,
     email_address VARCHAR(255) NOT NULL,

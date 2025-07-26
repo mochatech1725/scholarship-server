@@ -1,7 +1,7 @@
 import express from 'express';
 import {
   getAll,
-  getByUserId,
+  getByStudentId,
   getById,
   create,
   update,
@@ -11,10 +11,10 @@ import {
 const router = express.Router();
 
 router.get('/', getAll);
-router.get('/:id', getById);
-router.get('/getByUserId/:userId', getByUserId);
+router.get('/:recommender_id', getById);
+router.get('/getByStudentId/:student_id', getByStudentId);
 router.post('/create', create);
-router.post('/update/:id', update);
-router.delete('/delete/:id', deleteRecommender);
+router.post('/update/:recommender_id', update);
+router.delete('/delete/:recommender_id', deleteRecommender);
 
 export default router; 

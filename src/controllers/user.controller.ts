@@ -15,7 +15,7 @@ export const getUsers = async (req: Request, res: Response) => {
       users.map(async (user) => {
         const searchPreferences = await knex<UserSearchPreferences>('user_search_preferences')
           .select('*')
-          .where({ user_id: user.user_id })
+          .where({ student_id: user.user_id }) 
           .first();
         
         return {
@@ -47,7 +47,37 @@ export const getUserById = async (req: Request, res: Response) => {
     // Fetch search preferences for the user
     const searchPreferences = await knex<UserSearchPreferences>('user_search_preferences')
       .select('*')
-      .where({ user_id: user.user_id })
+      .where({ student_id: user.user_id })
+      .first();
+    
+    const userWithPreferences = {
+      ...user,
+      searchPreferences: searchPreferences || null
+    };
+    
+    res.json(userWithPreferences);
+  } catch (error) {
+    console.error('Error fetching user:', error);
+    res.status(500).json({ message: 'Error fetching user', error });
+  }
+};
+
+export const getByStudentId = async (req: Request, res: Response) => {
+  try {
+    const knex = getKnex();
+    const user = await knex<User>('users')
+      .select('*')
+      .where({ user_id: parseInt(req.params.student_id) })
+      .first();
+    
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    
+    // Fetch search preferences for the user
+    const searchPreferences = await knex<UserSearchPreferences>('user_search_preferences')
+      .select('*')
+      .where({ student_id: parseInt(req.params.student_id) })
       .first();
     
     const userWithPreferences = {
@@ -80,7 +110,7 @@ export const saveUserProfile = async (req: Request, res: Response) => {
     const searchPrefs = req.body.searchPreferences;
     if (searchPrefs) {
       const searchPreferencesData = {
-        user_id: user.user_id,
+        student_id: user.user_id,
         target_type: searchPrefs.target_type,
         subject_areas: searchPrefs.subject_areas ? JSON.stringify(searchPrefs.subject_areas) : undefined,
         gender: searchPrefs.gender,
@@ -94,12 +124,12 @@ export const saveUserProfile = async (req: Request, res: Response) => {
 
       // Update or insert search preferences
       const existingPrefs = await knex('user_search_preferences')
-        .where({ user_id: user.user_id })
+        .where({ student_id: user.user_id })
         .first();
 
       if (existingPrefs) {
         await knex('user_search_preferences')
-          .where({ user_id: user.user_id })
+          .where({ student_id: user.user_id })
           .update(searchPreferencesData);
       } else {
         await knex('user_search_preferences')
@@ -120,7 +150,7 @@ export const saveUserProfile = async (req: Request, res: Response) => {
 
     const searchPreferences = await knex<UserSearchPreferences>('user_search_preferences')
       .select('*')
-      .where({ user_id: user.user_id })
+      .where({ student_id: user.user_id })
       .first();
     
     const userWithPreferences = {

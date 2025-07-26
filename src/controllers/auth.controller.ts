@@ -33,7 +33,7 @@ export const login = async (req: Request, res: Response) => {
     // Fetch search preferences for the user
     const searchPreferences = await knex<UserSearchPreferences>('user_search_preferences')
       .select('*')
-      .where({ user_id: user.user_id })
+      .where({ student_id: user.user_id })
       .first();
 
     const userWithPreferences = {
@@ -46,11 +46,6 @@ export const login = async (req: Request, res: Response) => {
       auth0Profile: auth0User
     };
 
-    // console.log('Sending response:', response);
-    // console.log('Response JSON:', JSON.stringify(response, null, 2));
-    
-    res.json(response);
-    //console.log('Response sent successfully');
   } catch (error) {
     console.error('Error getting profile:', error);
     res.status(500).json({ message: 'Error retrieving profile', error: error instanceof Error ? error.message : 'Unknown error' });
@@ -109,7 +104,7 @@ export const createUser = async (req: Request, res: Response) => {
     if (req.body.profile?.searchPreferences) {
       const searchPrefs = req.body.profile.searchPreferences;
       const searchPreferencesData = {
-        user_id: savedUser.user_id,
+        student_id: savedUser.user_id,
         target_type: searchPrefs.target_type,
         subject_areas: searchPrefs.subject_areas ? JSON.stringify(searchPrefs.subject_areas) : undefined,
         gender: searchPrefs.gender,

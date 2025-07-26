@@ -44,12 +44,12 @@ export const getAll = async (req: Request, res: Response) => {
   }
 };
 
-export const getByUserId = async (req: Request, res: Response) => {
+export const getByStudentId = async (req: Request, res: Response) => {
   try {
     const knex = getKnex();
     const applications = await knex<Application>('applications')
       .select('*')
-      .where({ student_id: req.params.userId })
+      .where({ student_id: parseInt(req.params.student_id)})
       .orderBy('created_at', 'desc');
     
     const populatedApplications = await populateApplicationsWithRelatedData(applications);
@@ -65,7 +65,7 @@ export const getById = async (req: Request, res: Response) => {
     const knex = getKnex();
     const application = await knex<Application>('applications')
       .select('*')
-      .where({ application_id: parseInt(req.params.id) })
+      .where({ application_id: parseInt(req.params.application_id) })
       .first();
     
     if (!application) {
@@ -107,7 +107,7 @@ export const update = async (req: Request, res: Response) => {
   try {
     const knex = getKnex();
     const updatedCount = await knex<Application>('applications')
-      .where({ application_id: parseInt(req.params.id) })
+      .where({ application_id: parseInt(req.params.application_id) })
       .update({
         ...req.body,
         updated_at: new Date()
@@ -119,7 +119,7 @@ export const update = async (req: Request, res: Response) => {
     
     const updatedApplication = await knex<Application>('applications')
       .select('*')
-      .where({ application_id: parseInt(req.params.id) })
+      .where({ application_id: parseInt(req.params.application_id) })
       .first();
     
     if (!updatedApplication) {
@@ -138,7 +138,7 @@ export const deleteApplication = async (req: Request, res: Response) => {
   try {
     const knex = getKnex();
     const deletedCount = await knex<Application>('applications')
-      .where({ application_id: parseInt(req.params.id) })
+      .where({ application_id: parseInt(req.params.application_id) })
       .del();
     
     if (deletedCount === 0) {
