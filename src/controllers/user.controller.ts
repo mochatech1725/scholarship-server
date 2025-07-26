@@ -37,7 +37,7 @@ export const getUserById = async (req: Request, res: Response) => {
     const knex = getKnex();
     const user = await knex<User>('users')
       .select('*')
-      .where({ auth_user_id: req.params.userId })
+      .where({ auth_user_id: req.params.auth_user_id })
       .first();
     
     if (!user) {

@@ -28,9 +28,6 @@ export const login = async (req: Request, res: Response) => {
       });
     }
 
-    console.log('Existing user found:', user.user_id);
-
-    // Fetch search preferences for the user
     const searchPreferences = await knex<UserSearchPreferences>('user_search_preferences')
       .select('*')
       .where({ student_id: user.user_id })
@@ -46,6 +43,7 @@ export const login = async (req: Request, res: Response) => {
       auth0Profile: auth0User
     };
 
+    res.json(response);
   } catch (error) {
     console.error('Error getting profile:', error);
     res.status(500).json({ message: 'Error retrieving profile', error: error instanceof Error ? error.message : 'Unknown error' });
@@ -100,24 +98,6 @@ export const createUser = async (req: Request, res: Response) => {
       .insert(userData)
       .returning('*');
 
-    // If profile data is provided, create search preferences
-    if (req.body.profile?.searchPreferences) {
-      const searchPrefs = req.body.profile.searchPreferences;
-      const searchPreferencesData = {
-        student_id: savedUser.user_id,
-        target_type: searchPrefs.target_type,
-        subject_areas: searchPrefs.subject_areas ? JSON.stringify(searchPrefs.subject_areas) : undefined,
-        gender: searchPrefs.gender,
-        ethnicity: searchPrefs.ethnicity,
-        academic_gpa: searchPrefs.academic_gpa,
-        essay_required: searchPrefs.essay_required,
-        recommendations_required: searchPrefs.recommendations_required,
-        academic_level: searchPrefs.academic_level
-      };
-
-      await knex('user_search_preferences').insert(searchPreferencesData);
-    }
-    
     res.status(201).json({
       message: 'User created successfully',
       user: savedUser

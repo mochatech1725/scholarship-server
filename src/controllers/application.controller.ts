@@ -49,13 +49,13 @@ export const getByStudentId = async (req: Request, res: Response) => {
     const knex = getKnex();
     const applications = await knex<Application>('applications')
       .select('*')
-      .where({ student_id: parseInt(req.params.student_id)})
+      .where({ student_id: parseInt(req.params.user_id)})
       .orderBy('created_at', 'desc');
     
     const populatedApplications = await populateApplicationsWithRelatedData(applications);
     res.json(populatedApplications);
   } catch (error) {
-    console.error('Error in getByUserId:', error);
+    console.error('Error in getByStudentId:', error);
     res.status(500).json({ message: 'Error fetching applications', error });
   }
 };

@@ -40,12 +40,12 @@ export const getByStudentId = async (req: Request, res: Response) => {
     const knex = getKnex();
     const recommenders = await knex<Recommender>('recommenders')
       .select('*')
-      .where({ student_id: parseInt(req.params.student_id) })
+      .where({ student_id: parseInt(req.params.user_id) })
       .orderBy('created_at', 'desc');
     
     res.json(recommenders || []);
   } catch (error) {
-    console.error('Error in getByUserId:', error);
+    console.error('Error in getByStudentId:', error);
     res.status(500).json({ message: 'Error fetching recommenders', error });
   }
 };
